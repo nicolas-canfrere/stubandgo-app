@@ -33,6 +33,9 @@ Intended structure (later tasks add the folders that do not exist yet):
 - `src/scan/`: QR code scan (camera and image).
 - `src/test/`: test tooling only (`setup.ts`, `server.ts` MSW server,
   `render.tsx` with `renderWithProviders`).
+- `e2e/`: the Playwright end-to-end flow (`l1-flow.spec.ts`), run by `make e2e`
+  against the real stacks; `check-stack.ts` checks them first. Excluded from
+  Vitest, type-checked through `tsconfig.e2e.json`.
 - `src/App.tsx` (layout and navigation), `src/main.tsx` (providers and
   router), `src/index.css` (Tailwind).
 
@@ -78,6 +81,10 @@ Vitest with jsdom and Testing Library, configured in `vite.config.ts`;
   (QueryClient with retries disabled + `MemoryRouter`).
 - Query by role and accessible name, as a user would.
 - `make test`: the whole suite.
+- `make e2e` (separate from `make ci`): the Playwright flow in the
+  `mcr.microsoft.com/playwright` image (`PLAYWRIGHT_VERSION`, kept equal to the
+  `@playwright/test` pin), on the host network. It needs the API stack with
+  `app:demo:load` and the front (`make up`); it starts neither.
 
 ## Feature workflow
 

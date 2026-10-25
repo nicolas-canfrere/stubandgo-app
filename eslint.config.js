@@ -5,7 +5,16 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['src/api/schema.d.ts', 'dist', 'node_modules', 'coverage'] },
+  {
+    ignores: [
+      'src/api/schema.d.ts',
+      'dist',
+      'node_modules',
+      'coverage',
+      'test-results',
+      'playwright-report',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,

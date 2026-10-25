@@ -11,3 +11,18 @@ services:
       - '5173:5173'
     volumes:
       - ./:/app
+
+  # End-to-end flow (make e2e): host network, to reach the front, the API and Mailpit on localhost.
+  e2e:
+    image: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION:-1.64.1}-noble
+    profiles: [e2e]
+    user: '${UID:-1000}:${GID:-1000}'
+    working_dir: /app
+    network_mode: host
+    ipc: host
+    environment:
+      HOME: /tmp
+      npm_config_cache: /tmp/npm-cache
+      npm_config_update_notifier: 'false'
+    volumes:
+      - ./:/app
