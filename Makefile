@@ -1,11 +1,13 @@
 NODE_VERSION = 24.22.1
 export NODE_VERSION
 
+API_DIR ?= ../stubandgo
+
 NODE = docker compose run --rm --no-deps node
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install up down lint typecheck test build ci
+.PHONY: help install up down lint typecheck test build api-types api-types-check ci
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -34,4 +36,13 @@ test: node_modules ## Run the Vitest suite
 build: node_modules ## Build the production bundle
 	$(NODE) npm run build
 
-ci: lint typecheck test build ## Run every quality gate
+api-types: node_modules ## Copy the API contract from $(API_DIR) and regenerate src/api/schema.d.ts
+	mkdir -p openapi
+	cp $(API_DIR)/openapi.yaml openapi/openapi.yaml
+	$(NODE) npx openapi-typescript openapi/openapi.yaml -o src/api/schema.d.ts
+
+api-types-check: node_modules ## Fail if src/api/schema.d.ts differs from openapi/openapi.yaml
+	$(NODE) sh -c 'npx openapi-typescript openapi/openapi.yaml -o /tmp/schema.check.d.ts >/dev/null && cmp /tmp/schema.check.d.ts src/api/schema.d.ts' \
+		|| { echo 'src/api/schema.d.ts is stale: run make api-types'; exit 1; }
+
+ci: lint typecheck api-types-check test build ## Run every quality gate

@@ -89,7 +89,10 @@ Every change follows these steps, in order:
 3. **Gate.** Run `make ci`.
 
 `make ci` runs, in order: `lint` (ESLint + Prettier check), `typecheck`
-(`tsc`), `test` (Vitest), `build` (Vite). Run `npm run format` through
+(`tsc`), `api-types-check` (`schema.d.ts` matches `openapi/openapi.yaml`),
+`test` (Vitest), `build` (Vite). After an API contract change, run
+`make api-types` (copies `$(API_DIR)/openapi.yaml`, default `../stubandgo`, then
+regenerates `src/api/schema.d.ts`). Run `npm run format` through
 `make`'s container (or `docker compose run --rm --no-deps node npm run format`)
 to fix formatting. No mutation testing on the front.
 
