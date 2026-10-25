@@ -50,3 +50,15 @@ describe('App', () => {
     expect(auth.signinRedirect).toHaveBeenCalledWith({ state: '/scan' });
   });
 });
+
+describe('App platform space', () => {
+  it('links to both spaces', () => {
+    renderWithProviders(<App />);
+
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByRole('link', { name: 'Plateforme' })).toHaveAttribute(
+      'href',
+      '/plateforme',
+    );
+  });
+});

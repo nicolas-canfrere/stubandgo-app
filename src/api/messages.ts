@@ -7,6 +7,13 @@ const MESSAGES: Record<string, string> = {
   payment_declined: 'Paiement refusé, vos places ont été libérées.',
   unauthorized: 'Votre session a expiré.',
   forbidden: 'Ce billet ne peut pas être contrôlé avec votre compte.',
+  organization_slug_taken: 'Cet identifiant est déjà utilisé par une autre organisation.',
+  organization_name_taken: 'Ce nom est déjà utilisé par une autre organisation.',
+  organization_not_active:
+    "L'organisation n'est pas encore active : relancez sa création avant d'inviter un membre.",
+  member_already_exists: 'Ce membre existe déjà : cette adresse email a déjà un compte.',
+  identity_provider_unavailable:
+    "Le fournisseur d'identité ne répond pas. Réessayez dans un instant.",
   order_expired: 'Réservation expirée, vos places ont été libérées.',
 };
 

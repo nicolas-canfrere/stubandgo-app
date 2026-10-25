@@ -24,6 +24,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/backoffice/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every event of the organization of the caller, drafts included.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). The events are those of the organization of the token, by start date.
+         */
+        get: operations["get_catalog_backoffice_list_events"];
+        put?: never;
+        /**
+         * Create a draft event in the organization of the caller.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). The organization is the one of the token, never taken from the request. The event starts as a draft, invisible to the public catalog.
+         */
+        post: operations["post_catalog_backoffice_create_event"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backoffice/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show an event of the organization of the caller, whatever its status.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin).
+         */
+        get: operations["get_catalog_backoffice_get_event"];
+        /**
+         * Replace every field of a draft event, its price tiers included.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). Only an unlocked draft can be revised. A tier with the identifier of a tier of the event is kept, one without identifier is created, one missing from the list is deleted.
+         */
+        put: operations["put_catalog_backoffice_revise_event"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backoffice/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite a member into the organization of the caller.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin); the organization is the one of the token, never taken from the request. Keycloak sends the invitation email.
+         */
+        post: operations["post_catalog_backoffice_invite_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backoffice/events/{eventId}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish an event so that it appears in the public catalog and opens for sale.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin).
+         */
+        post: operations["post_catalog_backoffice_publish_event"];
+        /**
+         * Take an event off sale: it goes back to draft.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). Refused once seats have been taken.
+         */
+        delete: operations["delete_catalog_backoffice_unpublish_event"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{eventId}": {
         parameters: {
             query?: never;
@@ -78,6 +170,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/organizations/{organizationId}/commission-rate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change the commission rate of an organization.
+         * @description Requires the Keycloak access token of a platform administrator (staff realm role platform-admin). The new rate applies to the orders placed afterwards.
+         */
+        put: operations["put_catalog_platform_change_commission_rate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every organization of the platform, by name.
+         * @description Requires the Keycloak access token of a platform administrator (staff realm role platform-admin).
+         */
+        get: operations["get_catalog_platform_list_organizations"];
+        put?: never;
+        /**
+         * Create an organization and provision it in Keycloak.
+         * @description Requires the Keycloak access token of a platform administrator (staff realm role platform-admin). When Keycloak is unreachable the organization is created anyway and answers with the status pending_keycloak: retry with the provisioning route.
+         */
+        post: operations["post_catalog_platform_create_organization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/organizations/{organizationId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite a member into any active organization.
+         * @description Requires the Keycloak access token of a platform administrator (staff realm role platform-admin). Keycloak sends the invitation email. This is how the first administrator of an organization is invited.
+         */
+        post: operations["post_catalog_platform_invite_member"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/organizations/{organizationId}/provisioning": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Provision an organization in Keycloak, or retry it.
+         * @description Requires the Keycloak access token of a platform administrator (staff realm role platform-admin). Idempotent: an organization that is already active is returned as is, without calling Keycloak.
+         */
+        post: operations["post_catalog_platform_provision_organization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{eventId}/availability": {
         parameters: {
             query?: never;
@@ -87,6 +263,26 @@ export interface paths {
         };
         /** Show how many seats are still available for an event. */
         get: operations["get_sales_get_event_availability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backoffice/events/{eventId}/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Report the sales of an event of the organization of the caller.
+         * @description Only paid orders count in the tickets and amounts, which are sums of the amounts frozen on the orders; the remaining seats also leave out the seats held by pending orders. Requires the Keycloak access token of an administrator of an organization (realm role organization-admin).
+         */
+        get: operations["get_sales_backoffice_get_event_sales"];
         put?: never;
         post?: never;
         delete?: never;
@@ -240,6 +436,22 @@ export interface components {
             startsAt: string;
             organization: components["schemas"]["OrganizationReference"];
         };
+        /** @description An organization as the platform administration sees it. */
+        OrganizationAdmin: {
+            /** @description ULID of the organization */
+            id: string;
+            /** @example Rock Asso */
+            name: string;
+            /** @example demo-rock-asso */
+            slug: string;
+            /** @description Commission of the platform on each sale */
+            commissionBasisPoints: number;
+            /**
+             * @description pending_keycloak: not yet provisioned in Keycloak, to be retried.
+             * @enum {string}
+             */
+            status: "active" | "pending_keycloak";
+        };
         PriceTier: {
             /** @description ULID of the price tier */
             id: string;
@@ -266,6 +478,47 @@ export interface components {
             /** @example 200 */
             capacity: number;
             organization: components["schemas"]["OrganizationReference"];
+            priceTiers: components["schemas"]["PriceTier"][];
+        };
+        /** @description An event of an organization as its administrators list it. */
+        BackofficeEventSummary: {
+            /** @description ULID of the event */
+            id: string;
+            /** @example Soirée Rock */
+            title: string;
+            /**
+             * Format: date-time
+             * @description Start in UTC (RFC 3339, Z suffix); the front converts it for display
+             * @example 2026-11-20T19:00:00Z
+             */
+            startsAt: string;
+            /**
+             * @description draft: invisible to the public catalog and closed for sale.
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            /** @description True once seats have been taken: the event can then be neither revised nor unpublished. */
+            locked: boolean;
+        };
+        /** @description An event of an organization with everything its administrators can edit. */
+        BackofficeEvent: {
+            /** @description ULID of the event */
+            id: string;
+            /** @example Soirée Rock */
+            title: string;
+            /**
+             * Format: date-time
+             * @description Start in UTC (RFC 3339, Z suffix); the front converts it for display
+             * @example 2026-11-20T19:00:00Z
+             */
+            startsAt: string;
+            /** @enum {string} */
+            status: "draft" | "published";
+            locked: boolean;
+            description: string;
+            venue: string;
+            /** @example 200 */
+            capacity: number;
             priceTiers: components["schemas"]["PriceTier"][];
         };
         HealthCheck: {
@@ -295,6 +548,106 @@ export interface components {
              * @example gKLhZN-ot9fBxtYtPWJNQkFE2j03nIhf5Rfh3Q52pww
              */
             token: string;
+        };
+        NewPriceTierRequest: {
+            /**
+             * @description Label of the price tier.
+             * @example Plein tarif
+             */
+            label: string;
+            /**
+             * @description Price in euro cents.
+             * @example 2500
+             */
+            priceCents: number;
+        };
+        CreateEventRequest: {
+            /** @example Soirée Rock */
+            title: string;
+            /** @example Trois groupes sur scène. */
+            description: string;
+            /** @example La Cigale */
+            venue: string;
+            /**
+             * @description Start as an ISO 8601 date-time with a UTC offset; it must be in the future.
+             * @example 2026-11-20T20:00:00+01:00
+             */
+            startsAt: string;
+            /**
+             * @description Number of seats.
+             * @example 200
+             */
+            capacity: number;
+            /** @description The price tiers of the event; each one gets a new identifier. */
+            priceTiers: components["schemas"]["NewPriceTierRequest"][];
+        };
+        InviteMemberRequest: {
+            /**
+             * @description Email address of the invited member; it must not belong to a Keycloak user yet.
+             * @example nouveau@rock-asso.test
+             */
+            email: string;
+            /**
+             * @description Role of the invited member in the organization.
+             * @example controller
+             * @enum {string}
+             */
+            role: "admin" | "controller";
+        };
+        PriceTierRequest: {
+            /**
+             * @description Label of the price tier.
+             * @example Plein tarif
+             */
+            label: string;
+            /**
+             * @description Price in euro cents.
+             * @example 2500
+             */
+            priceCents: number;
+            /**
+             * @description ULID of an existing tier of the event, to keep it; omitted, a new tier is created.
+             * @default null
+             */
+            id: string | null;
+        };
+        EventRequest: {
+            /** @example Soirée Rock */
+            title: string;
+            /** @example Trois groupes sur scène. */
+            description: string;
+            /** @example La Cigale */
+            venue: string;
+            /**
+             * @description Start as an ISO 8601 date-time with a UTC offset; it must be in the future.
+             * @example 2026-11-20T20:00:00+01:00
+             */
+            startsAt: string;
+            /**
+             * @description Number of seats.
+             * @example 200
+             */
+            capacity: number;
+            /** @description The complete list of price tiers: a tier missing from it is deleted on revision. */
+            priceTiers: components["schemas"]["PriceTierRequest"][];
+        };
+        ChangeCommissionRateRequest: {
+            /** @description Commission of the platform on each sale, in basis points (0 to 10000). */
+            commissionBasisPoints: number;
+        };
+        CreateOrganizationRequest: {
+            /**
+             * @description Display name of the organization, unique.
+             * @example Rock Asso
+             */
+            name: string;
+            /**
+             * @description URL identifier, unique: 3 to 64 lowercase letters, digits or single hyphens between them.
+             * @example rock-asso
+             */
+            slug: string;
+            /** @description Commission of the platform on each sale, in basis points (0 to 10000). */
+            commissionBasisPoints: number;
         };
         PayOrderRequest: {
             /** @example 4242424242424242 */
@@ -376,6 +729,379 @@ export interface operations {
             };
             /** @description Malformed payload (/problems/validation_failed); nothing is recorded. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_catalog_backoffice_list_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The events of the organization, by start date. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        events: components["schemas"]["BackofficeEventSummary"][];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of an organization known to the platform (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_backoffice_create_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEventRequest"];
+            };
+        };
+        responses: {
+            /** @description The draft event was created; its URL is in the Location header. */
+            201: {
+                headers: {
+                    /** @description URL of the event. */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackofficeEvent"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of an organization known to the platform (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed) or a value that breaks a rule: /problems/invalid_value, or /problems/event_start_in_past when the start is not in the future. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_catalog_backoffice_get_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the event. */
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The event. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackofficeEvent"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of the organization that owns the event, or the event does not exist (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_catalog_backoffice_revise_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the event. */
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRequest"];
+            };
+        };
+        responses: {
+            /** @description The revised event. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackofficeEvent"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of the organization that owns the event, or the event does not exist (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The event is published (/problems/event_not_draft) or locked because seats were taken (/problems/event_locked). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed) or a value that breaks a rule: /problems/invalid_value (including a tier of another event), or /problems/event_start_in_past. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_backoffice_invite_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description The invitation was sent. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of an organization known to the platform (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The email address is already known to Keycloak (/problems/member_already_exists), or the organization is not provisioned in Keycloak yet (/problems/organization_not_active). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed) or an invalid email address or role (/problems/invalid_value). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Keycloak is unreachable or refused the request (/problems/identity_provider_unavailable). */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_backoffice_publish_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the event. */
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The published event. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackofficeEvent"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of the organization that owns the event, or the event does not exist (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The event is already published (/problems/event_already_published). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The event has no price tier (/problems/event_without_price_tier) or starts in the past (/problems/event_start_in_past). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_catalog_backoffice_unpublish_event: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the event. */
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The event, back to draft. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackofficeEvent"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of the organization that owns the event, or the event does not exist (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The event is not published (/problems/event_not_published) or is locked because seats were taken (/problems/event_locked). */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -478,6 +1204,309 @@ export interface operations {
             };
         };
     };
+    put_catalog_platform_change_commission_rate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the organization. */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeCommissionRateRequest"];
+            };
+        };
+        responses: {
+            /** @description The organization with its new rate. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationAdmin"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a platform administrator (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No organization has this identifier (/problems/organization_not_found). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed) or a rate outside 0 to 10000 basis points (/problems/invalid_value). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_catalog_platform_list_organizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organizations, in the alphabetical order of their names. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        organizations: components["schemas"]["OrganizationAdmin"][];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a platform administrator (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_platform_create_organization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrganizationRequest"];
+            };
+        };
+        responses: {
+            /** @description The organization was created, active or pending_keycloak; its URL is in the Location header. */
+            201: {
+                headers: {
+                    /** @description URL of the organization. */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationAdmin"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a platform administrator (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The slug or the name is already used by another organization (/problems/organization_slug_taken or /problems/organization_name_taken). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed, with a violations member) or a value that breaks a rule: /problems/invalid_value (name, slug or commission rate). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_platform_invite_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the organization. */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description The invitation was sent. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a platform administrator (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No organization has this identifier (/problems/organization_not_found). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The email address is already known to Keycloak (/problems/member_already_exists), or the organization is not provisioned in Keycloak yet (/problems/organization_not_active). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed) or an invalid email address or role (/problems/invalid_value). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Keycloak is unreachable or refused the request (/problems/identity_provider_unavailable). */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_catalog_platform_provision_organization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the organization. */
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The organization, active. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationAdmin"];
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a platform administrator (/problems/forbidden). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description No organization has this identifier (/problems/organization_not_found). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Keycloak is unreachable or refused the request (/problems/identity_provider_unavailable); the organization stays pending_keycloak. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_sales_get_event_availability: {
         parameters: {
             query?: never;
@@ -505,6 +1534,68 @@ export interface operations {
             };
             /** @description The event is not on sale (/problems/event_not_on_sale) or its identifier is not a valid ULID (/problems/invalid_value). */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_sales_backoffice_get_event_sales: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ULID of the event. */
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sales of the event; amounts are in euro cents. Every price tier of the event is listed, with zeros when it sold nothing. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        eventId: string;
+                        /** @example 93 */
+                        seatsRemaining: number;
+                        /** @example 4 */
+                        ticketsSold: number;
+                        /** @example 9000 */
+                        totalCents: number;
+                        /** @example 1150 */
+                        commissionCents: number;
+                        /** @example 7850 */
+                        netCents: number;
+                        priceTiers: {
+                            priceTierId: string;
+                            /** @example Plein tarif */
+                            label: string;
+                            /** @example 3 */
+                            ticketsSold: number;
+                            /** @example 7500 */
+                            totalCents: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not an administrator of the organization that owns the event, or the event does not exist (/problems/forbidden). */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

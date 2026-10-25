@@ -29,9 +29,14 @@ Intended structure (later tasks add the folders that do not exist yet):
   handling, TanStack Query hooks.
 - `src/auth/`: Keycloak sign-in (`oidc-client-ts` + `react-oidc-context`):
   `oidcConfig.ts` (UserManager, `VITE_OIDC_*`), `member.ts` (`readMember` reads the
-  organization and role claims), `RequireLogin.tsx`. The access token is read from the
-  UserManager at request time and attached only to the scan call (`src/api/client.ts`);
-  never log it.
+  organization and role claims), `staffOidcConfig.ts` (second UserManager,
+  realm `stubandgo-staff`, own storage keys), `StaffAuthProvider.tsx` (scopes `useAuth` to the
+  staff realm under `/plateforme`), `RequireLogin.tsx`. Access tokens are read from the
+  UserManagers at request time: the organizations' token goes to the scan call and
+  `/api/backoffice/*`, the staff token to `/api/platform/*`, nothing to other routes
+  (`src/api/client.ts`); never log them.
+- `src/money.ts`: parsers for typed amounts (`parseEuros`, `parsePercent`, integer cents and
+  basis points) and `formatPercent`; `formatEuros` stays in `src/format.ts`.
 - `src/pages/`: one component per route.
 - `src/components/`: reusable presentational components.
 - `src/orders/`: order and payment flow.

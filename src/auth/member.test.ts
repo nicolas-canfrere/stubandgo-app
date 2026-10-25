@@ -43,3 +43,18 @@ describe('readMember', () => {
     expect(readMember(profile({ name: undefined }))).toBeNull();
   });
 });
+
+describe('administrator roles', () => {
+  const withRoles = (...roles: string[]) => profile({ realm_access: { roles } });
+
+  it('is an organization administrator with the organization-admin realm role', () => {
+    expect(readMember(withRoles('organization-admin'))?.isOrganizationAdmin).toBe(true);
+    expect(readMember(withRoles('organization-controller'))?.isOrganizationAdmin).toBe(false);
+  });
+
+  it('is a platform administrator with the platform-admin realm role', () => {
+    expect(readMember(withRoles('platform-admin'))?.isPlatformAdmin).toBe(true);
+    expect(readMember(withRoles('organization-admin'))?.isPlatformAdmin).toBe(false);
+    expect(readMember(profile())?.isPlatformAdmin).toBe(false);
+  });
+});

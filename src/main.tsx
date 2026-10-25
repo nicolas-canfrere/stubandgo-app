@@ -4,12 +4,19 @@ import { createRoot } from 'react-dom/client';
 import { AuthProvider } from 'react-oidc-context';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
-import { setAccessTokenSource } from './api/client';
+import { setAccessTokenSources } from './api/client';
 import { onSigninCallback, userManager } from './auth/oidcConfig';
+import { staffUserManager } from './auth/staffOidcConfig';
 import './index.css';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-setAccessTokenSource(async () => (await userManager.getUser())?.access_token ?? null);
+setAccessTokenSources({
+  organizations: async () => (await userManager.getUser())?.access_token ?? null,
+  platform: async () => (await staffUserManager.getUser())?.access_token ?? null,
+});
+// The staff realm has its own provider (scoped to /plateforme) and its own callback: the
+// organizations provider must leave that callback alone.
+const isStaffSpace = window.location.pathname.startsWith('/plateforme');
 const root = document.getElementById('root');
 
 if (root === null) {
@@ -18,7 +25,11 @@ if (root === null) {
 
 createRoot(root).render(
   <StrictMode>
-    <AuthProvider userManager={userManager} onSigninCallback={onSigninCallback}>
+    <AuthProvider
+      userManager={userManager}
+      onSigninCallback={onSigninCallback}
+      skipSigninCallback={isStaffSpace}
+    >
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />

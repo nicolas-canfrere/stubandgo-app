@@ -4,24 +4,40 @@ import type { paths } from './schema';
 export const API_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 type AccessTokenSource = () => Promise<string | null>;
+type AccessTokenSources = { organizations: AccessTokenSource; platform: AccessTokenSource };
 
-let accessTokenSource: AccessTokenSource = async () => null;
+let sources: AccessTokenSources = { organizations: async () => null, platform: async () => null };
 
-/** Registers where the access token comes from (the OIDC UserManager); never stored here. */
-export function setAccessTokenSource(source: AccessTokenSource): void {
-  accessTokenSource = source;
+/** Registers where each realm's access token comes from (the UserManagers); never stored here. */
+export function setAccessTokenSources(next: AccessTokenSources): void {
+  sources = next;
 }
 
-// Only the scan call is authenticated: the API validates any presented token, so an expired one
-// sent to a public route would turn public browsing into 401s.
+// The scan and the organization space are called with an organization member's token, the
+// platform routes with a staff token. Every other route stays anonymous: the API validates any
+// presented token, so an expired one sent to a public route would turn public browsing into 401s.
 const SCAN_PATH = /^\/api\/events\/[^/]+\/scans$/;
+const BACKOFFICE_PATH = /^\/api\/backoffice\//;
+const PLATFORM_PATH = /^\/api\/platform\//;
+
+function sourceFor(method: string, pathname: string): AccessTokenSource | null {
+  if (PLATFORM_PATH.test(pathname)) {
+    return sources.platform;
+  }
+  if (BACKOFFICE_PATH.test(pathname) || (method === 'POST' && SCAN_PATH.test(pathname))) {
+    return sources.organizations;
+  }
+
+  return null;
+}
 
 const bearer: Middleware = {
   async onRequest({ request }) {
-    if (request.method !== 'POST' || !SCAN_PATH.test(new URL(request.url).pathname)) {
+    const source = sourceFor(request.method, new URL(request.url).pathname);
+    if (source === null) {
       return undefined;
     }
-    const token = await accessTokenSource();
+    const token = await source();
     if (token !== null) {
       request.headers.set('Authorization', `Bearer ${token}`);
     }

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { NavLink, Route, Routes } from 'react-router-dom';
+import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
+import { StaffAuthProvider } from './auth/StaffAuthProvider';
 import { RequireLogin } from './auth/RequireLogin';
 import { AccountMenu } from './components/AccountMenu';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
@@ -9,6 +10,8 @@ import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OrganizationPage } from './pages/OrganizationPage';
 import { PaymentPage } from './pages/PaymentPage';
+import { PlatformPage } from './pages/platform/PlatformPage';
+import { StaffAuthCallbackPage } from './pages/StaffAuthCallbackPage';
 
 // The scan page carries the QR code decoder: loaded only when the page is opened.
 const ScanPage = lazy(() =>
@@ -30,6 +33,9 @@ export function App() {
           <NavLink to="/scan" className={linkClass}>
             Contrôle d'accès
           </NavLink>
+          <NavLink to="/plateforme" className={linkClass}>
+            Plateforme
+          </NavLink>
           <AccountMenu />
         </nav>
       </header>
@@ -50,6 +56,17 @@ export function App() {
                 </RequireLogin>
               }
             />
+            <Route
+              path="/plateforme"
+              element={
+                <StaffAuthProvider>
+                  <Outlet />
+                </StaffAuthProvider>
+              }
+            >
+              <Route index element={<PlatformPage />} />
+              <Route path="callback" element={<StaffAuthCallbackPage />} />
+            </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { AuthContext, type AuthContextProps } from 'react-oidc-context';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { setAccessTokenSource } from '../api/client';
+import { setAccessTokenSources } from '../api/client';
 
 type Route = string | { pathname: string; state?: unknown };
 
@@ -25,7 +25,8 @@ export function renderWithProviders(
     defaultOptions: { queries: { retry: false } },
   });
   const accessToken = user?.accessToken ?? 'test-access-token';
-  setAccessTokenSource(async () => (user ? accessToken : null));
+  const token = async () => (user ? accessToken : null);
+  setAccessTokenSources({ organizations: token, platform: token });
   const auth = {
     isLoading: false,
     isAuthenticated: user !== undefined,

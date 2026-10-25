@@ -1,8 +1,16 @@
 import type { UserProfile } from 'oidc-client-ts';
 
-export type Member = { name: string; organizationSlug: string | null; isController: boolean };
+export type Member = {
+  name: string;
+  organizationSlug: string | null;
+  isController: boolean;
+  isOrganizationAdmin: boolean;
+  isPlatformAdmin: boolean;
+};
 
 const CONTROLLER_ROLE = 'organization-controller';
+const ORGANIZATION_ADMIN_ROLE = 'organization-admin';
+const PLATFORM_ADMIN_ROLE = 'platform-admin';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -17,9 +25,9 @@ function organizationSlug(claim: unknown): string | null {
   return slugs.length === 1 ? (slugs[0] ?? null) : null;
 }
 
-function hasControllerRole(realmAccess: unknown): boolean {
+function hasRealmRole(realmAccess: unknown, role: string): boolean {
   return isRecord(realmAccess) && Array.isArray(realmAccess.roles)
-    ? realmAccess.roles.includes(CONTROLLER_ROLE)
+    ? realmAccess.roles.includes(role)
     : false;
 }
 
@@ -35,6 +43,8 @@ export function readMember(profile: UserProfile): Member | null {
   return {
     name,
     organizationSlug: organizationSlug(profile.organization),
-    isController: hasControllerRole(profile.realm_access),
+    isController: hasRealmRole(profile.realm_access, CONTROLLER_ROLE),
+    isOrganizationAdmin: hasRealmRole(profile.realm_access, ORGANIZATION_ADMIN_ROLE),
+    isPlatformAdmin: hasRealmRole(profile.realm_access, PLATFORM_ADMIN_ROLE),
   };
 }
