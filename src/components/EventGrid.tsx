@@ -22,7 +22,7 @@ export function EventGrid({ events }: { events: EventSummary[] }) {
           <p className="text-sm text-slate-600">{event.venue}</p>
           <p className="mt-2 text-sm">
             <Link to={`/o/${event.organization.slug}`} className="text-slate-500 hover:underline">
-              {event.organization.slug}
+              {event.organization.name}
             </Link>
           </p>
         </li>

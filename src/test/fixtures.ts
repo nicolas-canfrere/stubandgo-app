@@ -8,7 +8,7 @@ export const rockEvent: EventSummary = {
   title: 'Soirée Rock',
   venue: 'La Cigale',
   startsAt: '2026-11-25T19:00:00Z',
-  organization: { slug: 'demo-rock-asso' },
+  organization: { slug: 'demo-rock-asso', name: 'Rock Asso' },
 };
 
 export const intimateEvent: EventSummary = {
@@ -16,7 +16,7 @@ export const intimateEvent: EventSummary = {
   title: 'Concert Intimiste',
   venue: 'Le Petit Bain',
   startsAt: '2026-12-09T19:00:00Z',
-  organization: { slug: 'demo-rock-asso' },
+  organization: { slug: 'demo-rock-asso', name: 'Rock Asso' },
 };
 
 export const theatreEvent: EventSummary = {
@@ -24,7 +24,7 @@ export const theatreEvent: EventSummary = {
   title: 'Le Malade imaginaire',
   venue: 'Salle Molière',
   startsAt: '2026-12-24T19:00:00Z',
-  organization: { slug: 'demo-theatre-ville' },
+  organization: { slug: 'demo-theatre-ville', name: 'Théâtre de la Ville' },
 };
 
 export const problemBody = (code: string, status: number, detail: string) => ({

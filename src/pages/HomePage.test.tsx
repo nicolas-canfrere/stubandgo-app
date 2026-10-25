@@ -26,7 +26,7 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: 'Le Malade imaginaire' })).toBeInTheDocument();
     expect(screen.getByText('mer. 25 nov. 2026 · 20:00')).toBeInTheDocument();
     expect(screen.getByText('La Cigale')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'demo-rock-asso' })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: 'Rock Asso' })).toHaveLength(2);
     expect(screen.queryByText(/places? restantes?/i)).not.toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe('HomePage', () => {
       </Routes>,
     );
 
-    await userEvent.click(await screen.findByRole('link', { name: 'demo-rock-asso' }));
+    await userEvent.click(await screen.findByRole('link', { name: 'Rock Asso' }));
 
     expect(await screen.findByRole('heading', { name: 'Rock Asso' })).toBeInTheDocument();
   });

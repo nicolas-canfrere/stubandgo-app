@@ -219,6 +219,8 @@ export interface components {
         OrganizationReference: {
             /** @example demo-rock-asso */
             slug: string;
+            /** @example Rock Asso */
+            name: string;
         };
         EventSummary: {
             /**
