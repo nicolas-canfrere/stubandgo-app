@@ -8,7 +8,8 @@ Cette étape (L1) est une application monopage (Vite, React 19, TypeScript, TanS
 
 - Docker avec Docker Compose, `make` et `git`. Node n'est pas nécessaire sur la machine : tout passe par des conteneurs (Node pour le front, l'image officielle Playwright pour le parcours de bout en bout).
 - Les deux dépôts côte à côte dans le même dossier : `stubandgo` (l'API) et `stubandgo-app` (ce dépôt). `make api-types` lit l'API dans `../stubandgo`.
-- Ports libres : 5173 (front), 8080 (API), 8025 (Mailpit), 15672 (RabbitMQ).
+- La stack de l'API sur sa branche Keycloak : elle démarre aussi Keycloak (http://localhost:8180, realm `stubandgo`), qui porte la connexion. Le front en a besoin pour la page de scan.
+- Ports libres : 5173 (front), 8080 (API), 8180 (Keycloak), 8025 (Mailpit), 15672 (RabbitMQ).
 - Pour `make e2e` : le conteneur Playwright utilise le réseau de l'hôte (`network_mode: host`) pour joindre le front, l'API et Mailpit sur `localhost`. C'est le fonctionnement natif de Docker Engine sous Linux ; avec Docker Desktop, il faut activer le réseau hôte (« Enable host networking » dans les réglages).
 
 ## Démarrage
@@ -37,6 +38,7 @@ make up                                                          # npm ci puis s
 | ---------------------- | ------------------------------------------------------------ |
 | Front                  | http://localhost:5173                                        |
 | API                    | http://localhost:8080 (santé : http://localhost:8080/health) |
+| Keycloak (connexion)   | http://localhost:8180                                        |
 | Mailpit (emails reçus) | http://localhost:8025                                        |
 
 Au premier `make up`, le conteneur installe les dépendances (`npm ci`) avant de servir l'application : compter quelques dizaines de secondes. L'URL de l'API vient de `VITE_API_URL` (fichier `.env`, `http://localhost:8080` par défaut).
@@ -48,7 +50,7 @@ Au premier `make up`, le conteneur installe les dépendances (`npm ci`) avant de
 3. Payez avec la carte refusée `4000 0000 0000 0002` : le paiement est refusé et les places sont libérées. Cliquez sur « Recommencer » : le formulaire revient prérempli (email et quantités), et le nombre de places restantes est revenu à sa valeur de départ. Cliquez de nouveau sur « Réserver et payer », puis payez avec la carte acceptée `4242 4242 4242 4242`.
 4. La page de confirmation renvoie vers Mailpit (http://localhost:8025). L'email « Vos billets — Soirée Rock » arrive après quelques secondes (il part de manière asynchrone, par le worker de l'API). Il contient un QR code par billet.
 5. Enregistrez l'image du QR code depuis Mailpit — elle apparaît dans le corps de l'email, pas en pièce jointe (Mailpit n'affiche aucune pièce jointe, seulement le badge « Inline images (2) ») : clic droit sur le QR code, « Enregistrer l'image sous… ».
-6. Ouvrez « Contrôle d'accès » (http://localhost:5173/scan), choisissez « Soirée Rock » dans « Événement contrôlé », puis déposez l'image dans la zone « Image du QR code » (ou « Choisir une image ») : « VALIDE — entrée autorisée ». Déposez la même image une seconde fois : « DÉJÀ UTILISÉ », avec l'heure du premier passage.
+6. Ouvrez « Contrôle d'accès » (http://localhost:5173/scan) : le front vous envoie vers Keycloak. Connectez-vous avec `controleur.rock` / `stubandgo-demo` (voir les comptes ci-dessous) ; vous revenez sur la page de scan. Choisissez « Soirée Rock » dans « Événement contrôlé », puis déposez l'image dans la zone « Image du QR code » (ou « Choisir une image ») : « VALIDE — entrée autorisée ». Déposez la même image une seconde fois : « DÉJÀ UTILISÉ », avec l'heure du premier passage.
 
 La page de scan sait aussi lire le QR code avec la webcam (« Démarrer la caméra ») : le navigateur n'autorise la caméra que sur une origine sûre, ce qui est le cas de `http://localhost`. On peut donc vérifier le scan à la main en présentant l'email ouvert sur un téléphone devant la webcam.
 
@@ -61,15 +63,27 @@ La page de scan sait aussi lire le QR code avec la webcam (« Démarrer la camé
 
 Le numéro se saisit avec ou sans espaces ; il est envoyé sans espaces. Aucune autre donnée de carte n'est demandée : le paiement est simulé par l'API.
 
+### Comptes de démonstration
+
+Mot de passe de tous les comptes : `stubandgo-demo`.
+
+| Compte               | Rôle                              | Effet sur « Contrôle d'accès »                             |
+| -------------------- | --------------------------------- | ---------------------------------------------------------- |
+| `controleur.rock`    | contrôleur de Rock Asso           | liste les événements de Rock Asso et permet de les scanner |
+| `controleur.theatre` | contrôleur de Théâtre de la Ville | ne voit aucun événement de Rock Asso                       |
+| `admin.rock`         | administrateur de Rock Asso       | « Votre compte n'a pas le rôle de contrôleur. »            |
+
+« Se déconnecter » (en haut à droite) ramène à l'accueil. Le compte `admin.plateforme` (realm `stubandgo-staff`) ne concerne pas ce front.
+
 ## Parcours de bout en bout (Playwright)
 
 ```bash
 make e2e
 ```
 
-`make e2e` rejoue le parcours de démonstration complet dans Chromium, contre les vraies stacks : un email unique par exécution, paiement refusé puis accepté, email retrouvé dans Mailpit par son API HTTP avec ses deux images `ticket-1.png` et `ticket-2.png`, puis `ticket-1.png` déposée sur la page de scan (« VALIDE », puis « DÉJÀ UTILISÉ »). Le QR code est vraiment lu dans l'image, comme pour un humain.
+`make e2e` rejoue le parcours de démonstration complet dans Chromium, contre les vraies stacks : un email unique par exécution, paiement refusé puis accepté, email retrouvé dans Mailpit par son API HTTP avec ses deux images `ticket-1.png` et `ticket-2.png`, puis connexion à Keycloak par le vrai formulaire (`controleur.rock`) et `ticket-1.png` déposée sur la page de scan (« VALIDE », puis « DÉJÀ UTILISÉ »). Le QR code est vraiment lu dans l'image, comme pour un humain. Un second test (`e2e/l2-isolation.spec.ts`) vérifie l'isolation : `controleur.theatre` ne voit pas « Soirée Rock », `admin.rock` est refusé, et la déconnexion ramène à l'accueil.
 
-`make e2e` ne lance rien : il exige la stack de l'API démarrée avec `app:demo:load`, et le front démarré par `make up`. Il vérifie d'abord `http://localhost:8080/health`, la présence de « Soirée Rock » dans `GET /api/events`, Mailpit et le front, et s'arrête avec un message clair si l'un manque (« lancez la stack de l'API et `app:demo:load` », ou « lancez-le avec make up »). Le test tourne dans l'image `mcr.microsoft.com/playwright`, dont la version (`PLAYWRIGHT_VERSION` dans le `Makefile`, `compose.yaml` et `.env`) doit rester celle de `@playwright/test` dans `package.json`.
+`make e2e` ne lance rien : il exige la stack de l'API démarrée avec `app:demo:load`, et le front démarré par `make up`. Il vérifie d'abord `http://localhost:8080/health`, la présence de « Soirée Rock » dans `GET /api/events`, Mailpit, la discovery de Keycloak (`http://localhost:8180/realms/stubandgo/.well-known/openid-configuration`) et le front, et s'arrête avec un message clair si l'un manque (« lancez la stack de l'API et `app:demo:load` », « lancez la stack de l'API : make up » pour Keycloak, ou « lancez-le avec make up »). Le test tourne dans l'image `mcr.microsoft.com/playwright`, dont la version (`PLAYWRIGHT_VERSION` dans le `Makefile`, `compose.yaml` et `.env`) doit rester celle de `@playwright/test` dans `package.json`.
 
 Chaque exécution achète deux billets de « Soirée Rock » (200 places). Les données de démonstration expirent au bout d'un mois environ (les événements sont datés de 31 à 60 jours après `app:demo:load`) : pour repartir de données neuves, suivez la procédure de remise à zéro du README de l'API.
 
@@ -103,7 +117,7 @@ Puis commitez `openapi/openapi.yaml` et `src/api/schema.d.ts` ensemble. Le dossi
 
 ## Limites de L1
 
-- **Le scan n'est pas protégé** : la page « Contrôle d'accès » est ouverte à tous, comme l'API de scan. C'est une limite assumée, levée en L2 avec l'authentification.
+- Seul le scan est protégé (connexion Keycloak, rôle contrôleur) ; la commande de billets reste anonyme.
 - Pas de compte acheteur ni de back-office : les organisations et les événements viennent de `app:demo:load`.
 - Le paiement est simulé : seules les deux cartes de test ont un sens.
 - La liste du scan propose les événements publiés à venir, sans filtre « aujourd'hui ».

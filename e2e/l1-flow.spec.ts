@@ -1,4 +1,5 @@
 import { type APIRequestContext, expect, type Page, test } from '@playwright/test';
+import { signIn } from './keycloak.ts';
 import { API_URL, DEMO_EVENT, MAILPIT_URL } from './stack.ts';
 
 type MailpitPart = { PartID: string; FileName: string; ContentType: string };
@@ -96,8 +97,10 @@ test('testFullL1Flow: buy two tickets, decline then pay, read the QR code from t
   expect(image.headers()['content-type']).toContain('image/png');
   const png = await image.body();
 
-  // 5. The scan page reads the QR code from the image: valid first, already used next.
+  // 5. A controller signs in through Keycloak; the scan page reads the QR code from the image: valid first, already used next.
   await page.getByRole('link', { name: "Contrôle d'accès" }).click();
+  await signIn(page, 'controleur.rock');
+  await expect(page.getByText('Organisation contrôlée : Rock Asso')).toBeVisible();
   const eventOption = page.getByRole('option', { name: new RegExp(`^${DEMO_EVENT} — `) });
   await page
     .getByLabel('Événement contrôlé')

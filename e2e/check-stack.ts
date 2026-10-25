@@ -1,6 +1,6 @@
 // Run by `make e2e` before Playwright: fails fast, with a clear message, when a stack is down.
 // Plain Node (type stripping): imports need their `.ts` extension.
-import { API_URL, DEMO_EVENT, FRONT_URL, MAILPIT_URL } from './stack.ts';
+import { API_URL, DEMO_EVENT, FRONT_URL, KEYCLOAK_URL, MAILPIT_URL } from './stack.ts';
 
 const START_API =
   "lancez la stack de l'API et `app:demo:load` (dans ../stubandgo : make up, " +
@@ -29,6 +29,10 @@ async function problems(): Promise<string[]> {
   }
   if ((await fetchOrNull(`${MAILPIT_URL}/api/v1/messages`))?.ok !== true) {
     found.push(`Mailpit ne répond pas sur ${MAILPIT_URL} : ${START_API}.`);
+  }
+  const discovery = `${KEYCLOAK_URL}/realms/stubandgo/.well-known/openid-configuration`;
+  if ((await fetchOrNull(discovery))?.ok !== true) {
+    found.push(`Keycloak ne répond pas sur ${discovery} : lancez la stack de l'API : make up.`);
   }
   if ((await fetchOrNull(FRONT_URL))?.ok !== true) {
     found.push(`Le front ne répond pas sur ${FRONT_URL} : lancez-le avec make up.`);
