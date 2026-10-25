@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { server } from '../test/server';
 import { api } from './client';
-import { ApiProblem, unwrap } from './problem';
+import { ApiProblem, isNotFound, unwrap } from './problem';
 
 const problem = (code: string, status: number, extra: object = {}) =>
   HttpResponse.json(
@@ -72,5 +72,21 @@ describe('unwrap', () => {
     const error = await caught(unwrap(orders()));
     expect(error.code).toBe('api_unreachable');
     expect(error.status).toBe(0);
+  });
+});
+
+describe('isNotFound', () => {
+  const make = (code: string, status: number) => new ApiProblem({ code, status, detail: '' });
+
+  it('is true for a 404 and for a malformed identifier (invalid_value)', () => {
+    expect(isNotFound(make('order_not_found', 404))).toBe(true);
+    expect(isNotFound(make('invalid_value', 422))).toBe(true);
+  });
+
+  it('is false for other problems and for no problem', () => {
+    expect(isNotFound(make('sold_out', 409))).toBe(false);
+    expect(isNotFound(make('api_unreachable', 0))).toBe(false);
+    expect(isNotFound(null)).toBe(false);
+    expect(isNotFound(undefined)).toBe(false);
   });
 });

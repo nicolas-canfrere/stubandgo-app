@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useScanTicket, useUpcomingEvents } from '../api/queries';
 import { ProblemNotice } from '../components/ProblemNotice';
 import { formatDateTime } from '../format';
@@ -13,7 +13,9 @@ const NO_QR = 'Aucun QR code lisible dans cette image.';
 export function ScanPage() {
   const events = useUpcomingEvents();
   const [eventId, setEventId] = useState('');
-  const scan = useScanTicket(eventId);
+  const scan = useScanTicket();
+  // The current selection, readable after an await (state captured in a closure would be stale).
+  const selectedEvent = useRef('');
   const [notice, setNotice] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
 
@@ -24,7 +26,7 @@ export function ScanPage() {
   // The token only travels from the decoder to the API call: never stored in state, never shown.
   const submitToken = (token: string) => {
     setNotice(null);
-    scan.mutate(token);
+    scan.mutate({ eventId, token });
   };
 
   const submitFile = async (file: File) => {
@@ -35,13 +37,18 @@ export function ScanPage() {
     }
     setNotice(null);
     setReading(true);
+    const scannedEvent = eventId;
     const token = await decodeQrFromFile(file);
     setReading(false);
+    // The selection changed while decoding: the token no longer belongs to the chosen event.
+    if (selectedEvent.current !== scannedEvent) {
+      return;
+    }
     if (token === null) {
       setNotice(NO_QR);
       return;
     }
-    scan.mutate(token);
+    scan.mutate({ eventId: scannedEvent, token });
   };
 
   return (
@@ -56,6 +63,7 @@ export function ScanPage() {
           value={eventId}
           disabled={events.isPending}
           onChange={(event) => {
+            selectedEvent.current = event.target.value;
             setEventId(event.target.value);
             setNotice(null);
             scan.reset();

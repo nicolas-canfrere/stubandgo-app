@@ -1,4 +1,5 @@
 import { useLocation, useParams } from 'react-router-dom';
+import { isNotFound } from '../api/problem';
 import { useAvailability, useEvent } from '../api/queries';
 import { OrderForm } from '../components/OrderForm';
 import { ProblemNotice } from '../components/ProblemNotice';
@@ -18,7 +19,7 @@ export function EventPage() {
   const { state } = useLocation();
   const { data: event, error, isPending } = useEvent(eventId);
 
-  if (error?.status === 404 || error?.code === 'invalid_value') {
+  if (isNotFound(error)) {
     return <NotFoundPage />;
   }
 

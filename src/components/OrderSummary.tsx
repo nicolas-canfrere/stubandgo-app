@@ -1,7 +1,5 @@
-import { useEvent } from '../api/queries';
+import { type OrderLine, useEvent } from '../api/queries';
 import { formatEuros } from '../format';
-
-type Line = { priceTierId?: string; quantity?: number; unitPriceCents?: number };
 
 /** Order lines with tier labels from the event; without them (event call failed) lines stay unlabelled. */
 export function OrderSummary({
@@ -10,7 +8,7 @@ export function OrderSummary({
   totalCents,
 }: {
   eventId: string;
-  lines: Line[];
+  lines: OrderLine[];
   totalCents: number;
 }) {
   const { data: event } = useEvent(eventId);

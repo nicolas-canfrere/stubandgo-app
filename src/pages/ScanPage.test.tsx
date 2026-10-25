@@ -257,6 +257,34 @@ describe('ScanPage', () => {
     expect(camera.sessions).toHaveLength(2);
   });
 
+  it('does not post the token when the event is deselected while the image is being decoded', async () => {
+    serveEvents();
+    const bodies: unknown[] = [];
+    const urls: string[] = [];
+    server.use(
+      http.post(`${API_URL}/api/events/:eventId/scans`, async ({ request }) => {
+        urls.push(request.url);
+        bodies.push(await request.json());
+
+        return HttpResponse.json({ outcome: 'valid', firstUsedAt: null });
+      }),
+    );
+    let resolveDecode: (value: string | null) => void = () => undefined;
+    decodeMock.mockReturnValue(new Promise((resolve) => (resolveDecode = resolve)));
+    renderWithProviders(<ScanPage />, { route: '/scan' });
+    await chooseRockEvent();
+    dropImage();
+    await screen.findByText("Lecture de l'image…");
+
+    await userEvent.selectOptions(screen.getByLabelText('Événement contrôlé'), '');
+    await act(async () => resolveDecode(token));
+
+    expect(urls).toEqual([]);
+    expect(bodies).toEqual([]);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain(token);
+  });
+
   it('shows the unreachable API message instead of an empty page', async () => {
     server.use(http.get(`${API_URL}/api/events`, () => HttpResponse.error()));
 

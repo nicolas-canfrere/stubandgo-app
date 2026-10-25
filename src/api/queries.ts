@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
-import type { components } from './schema';
+import type { components, operations } from './schema';
 import { type ApiProblem, unwrap } from './problem';
+
+/** One line of an order, as returned by the order status endpoint. */
+export type OrderLine =
+  operations['get_sales_get_order_status']['responses'][200]['content']['application/json']['lines'][number];
 
 export function useUpcomingEvents() {
   return useQuery<Awaited<ReturnType<typeof fetchUpcomingEvents>>, ApiProblem>({
@@ -103,9 +107,9 @@ export type ScanVerdict = Awaited<ReturnType<typeof scanTicket>>;
 export type ScanOutcome = ScanVerdict['outcome'];
 
 /** Scans a ticket token at the gate of an event; the token is a bearer secret, never logged. */
-export function useScanTicket(eventId: string) {
-  return useMutation<ScanVerdict, ApiProblem, string>({
-    mutationFn: (token) => scanTicket(eventId, token),
+export function useScanTicket() {
+  return useMutation<ScanVerdict, ApiProblem, { eventId: string; token: string }>({
+    mutationFn: ({ eventId, token }) => scanTicket(eventId, token),
   });
 }
 

@@ -4,7 +4,7 @@ import { formatDateTime } from '../format';
 const TONES: Record<ScanOutcome, string> = {
   valid: 'bg-green-700',
   already_used: 'bg-red-700',
-  wrong_event: 'bg-orange-500',
+  wrong_event: 'bg-orange-700',
   unknown: 'bg-red-700',
 };
 

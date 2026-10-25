@@ -1,4 +1,5 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { isNotFound } from '../api/problem';
 import { useOrder } from '../api/queries';
 import { OrderEnded } from '../components/OrderEnded';
 import { ProblemNotice } from '../components/ProblemNotice';
@@ -13,7 +14,7 @@ export function ConfirmationPage() {
   const { state } = useLocation();
   const { data: order, error, isPending } = useOrder(orderId);
 
-  if (error?.status === 404 || error?.code === 'invalid_value') {
+  if (isNotFound(error)) {
     return <NotFoundPage />;
   }
 
@@ -49,7 +50,12 @@ export function ConfirmationPage() {
       <p>{tickets > 1 ? `${tickets} billets` : `${tickets} billet`}</p>
       <p>Vos billets vous sont envoyés par email.</p>
       <p>
-        <a href={MAILPIT_URL} className="text-indigo-700 hover:underline">
+        <a
+          href={MAILPIT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-700 hover:underline"
+        >
           Ouvrir la boîte mail de démo ({MAILPIT_URL})
         </a>{' '}
         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold">démo</span>

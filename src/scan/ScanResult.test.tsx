@@ -22,7 +22,7 @@ describe('ScanResult', () => {
     render(<ScanResult outcome="wrong_event" firstUsedAt={null} />);
 
     expect(screen.getByRole('status')).toHaveTextContent('MAUVAIS ÉVÉNEMENT');
-    expect(screen.getByRole('status')).toHaveClass('bg-orange-500');
+    expect(screen.getByRole('status')).toHaveClass('bg-orange-700');
   });
 
   it('shows an unknown ticket in red', () => {

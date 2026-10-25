@@ -47,6 +47,14 @@ describe('ConfirmationPage', () => {
       'href',
       'http://localhost:8025',
     );
+    expect(screen.getByRole('link', { name: /localhost:8025/ })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
+    expect(screen.getByRole('link', { name: /localhost:8025/ })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer',
+    );
     expect(screen.getByText('démo')).toBeInTheDocument();
   });
 
@@ -82,5 +90,13 @@ describe('ConfirmationPage', () => {
     renderConfirmation();
 
     expect(await screen.findByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
+  });
+
+  it('shows a dedicated message when the API is unreachable', async () => {
+    server.use(http.get(orderUrl, () => HttpResponse.error()));
+
+    renderConfirmation();
+
+    expect(await screen.findByRole('heading', { name: 'API injoignable' })).toBeInTheDocument();
   });
 });

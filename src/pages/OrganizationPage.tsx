@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { isNotFound } from '../api/problem';
 import { useOrganization } from '../api/queries';
 import { EventGrid } from '../components/EventGrid';
 import { ProblemNotice } from '../components/ProblemNotice';
@@ -8,7 +9,7 @@ export function OrganizationPage() {
   const { slug = '' } = useParams();
   const { data, error, isPending } = useOrganization(slug);
 
-  if (error?.status === 404) {
+  if (isNotFound(error)) {
     return <NotFoundPage />;
   }
 

@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { isNotFound } from '../api/problem';
 import { useOrder, usePayOrder } from '../api/queries';
 import { Countdown } from '../components/Countdown';
 import { OrderEnded } from '../components/OrderEnded';
@@ -16,7 +17,7 @@ export function PaymentPage() {
   const { orderId = '' } = useParams();
   const { data: order, error, isPending } = useOrder(orderId);
 
-  if (error?.status === 404 || error?.code === 'invalid_value') {
+  if (isNotFound(error)) {
     return <NotFoundPage />;
   }
 

@@ -54,6 +54,22 @@ describe('OrganizationPage', () => {
     expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
   });
 
+  it('renders the not found page on a malformed slug rejected with invalid_value', async () => {
+    server.use(
+      http.get(`${API_URL}/api/organizations/AB`, () =>
+        HttpResponse.json(problemBody('invalid_value', 422, 'Invalid.'), {
+          status: 422,
+          headers: { 'Content-Type': 'application/problem+json' },
+        }),
+      ),
+    );
+
+    renderAt('/o/AB');
+
+    expect(await screen.findByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+  });
+
   it('shows a dedicated message when the API is unreachable', async () => {
     server.use(http.get(`${API_URL}/api/organizations/demo-rock-asso`, () => HttpResponse.error()));
 

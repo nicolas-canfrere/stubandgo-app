@@ -32,6 +32,11 @@ export class ApiProblem extends Error {
   }
 }
 
+/** True when the API says the resource does not exist: unknown (404) or malformed (invalid_value) identifier. */
+export function isNotFound(problem: ApiProblem | null | undefined): boolean {
+  return problem?.status === 404 || problem?.code === 'invalid_value';
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }

@@ -1,3 +1,5 @@
+import type { OrderLine } from '../api/queries';
+
 /** The order form content, passed as navigation state to restore it (key = priceTierId). */
 export type OrderDraft = { buyerEmail: string; quantities: Record<string, number> };
 
@@ -20,10 +22,8 @@ export function readOrderDraft(state: unknown): OrderDraft | null {
   return { buyerEmail, quantities: Object.fromEntries(entries) as Record<string, number> };
 }
 
-type OrderLines = { priceTierId?: string; quantity?: number }[];
-
 /** Navigation state when present, otherwise the quantities of the order lines and no email. */
-export function draftForOrder(state: unknown, lines: OrderLines): OrderDraft {
+export function draftForOrder(state: unknown, lines: OrderLine[]): OrderDraft {
   const fromState = readOrderDraft(state);
   if (fromState !== null) {
     return fromState;
