@@ -27,6 +27,11 @@ Intended structure (later tasks add the folders that do not exist yet):
 
 - `src/api/`: typed API client (`openapi-fetch`), Problem Details error
   handling, TanStack Query hooks.
+- `src/auth/`: Keycloak sign-in (`oidc-client-ts` + `react-oidc-context`):
+  `oidcConfig.ts` (UserManager, `VITE_OIDC_*`), `member.ts` (`readMember` reads the
+  organization and role claims), `RequireLogin.tsx`. The access token is read from the
+  UserManager at request time and attached only to the scan call (`src/api/client.ts`);
+  never log it.
 - `src/pages/`: one component per route.
 - `src/components/`: reusable presentational components.
 - `src/orders/`: order and payment flow.
@@ -78,7 +83,8 @@ Vitest with jsdom and Testing Library, configured in `vite.config.ts`;
   handler declared in the test (`server.use(...)`); an unhandled request
   fails the test.
 - Render with `renderWithProviders(ui, { route })` from `src/test/render.tsx`
-  (QueryClient with retries disabled + `MemoryRouter`).
+  (QueryClient with retries disabled + `MemoryRouter` + a mocked auth context; pass
+  `user: { name }` to simulate a signed-in member, Keycloak is never contacted).
 - Query by role and accessible name, as a user would.
 - `make test`: the whole suite.
 - `make e2e` (separate from `make ci`): the Playwright flow in the
