@@ -1,9 +1,11 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, vi, type MockInstance } from 'vitest';
 import { API_URL } from '../api/client';
-import { decodeQrFromFile } from '../scan/decodeQr';
+import type { IScannerControls } from '@zxing/browser';
+import type { Result } from '@zxing/library';
+import { decodeQrFromFile, qrReader } from '../scan/decodeQr';
 import { intimateEvent, rockEvent } from '../test/fixtures';
 import { renderWithProviders } from '../test/render';
 import { server } from '../test/server';
@@ -41,6 +43,33 @@ function serveScan(outcome: string, firstUsedAt: string | null = null) {
 
 function stubMediaDevices(value: unknown) {
   Object.defineProperty(navigator, 'mediaDevices', { value, configurable: true });
+}
+
+type FrameCallback = Parameters<typeof qrReader.decodeFromVideoDevice>[2];
+
+/** Fakes the camera: returns a function that feeds frames to the latest decoding session. */
+function fakeCamera() {
+  stubMediaDevices({ getUserMedia: vi.fn() });
+  const sessions: FrameCallback[] = [];
+  const controls: IScannerControls = { stop: vi.fn() };
+  vi.spyOn(qrReader, 'decodeFromVideoDevice').mockImplementation(
+    async (_device, _video, onFrame) => {
+      sessions.push(onFrame);
+
+      return controls;
+    },
+  );
+  const frame = { getText: () => token } as Result;
+
+  return {
+    sessions,
+    showQr: (frames: number) =>
+      act(() => {
+        for (let i = 0; i < frames; i++) {
+          sessions.at(-1)?.(frame, undefined, controls);
+        }
+      }),
+  };
 }
 
 const image = () => new File(['png'], 'billet.png', { type: 'image/png' });
@@ -191,6 +220,41 @@ describe('ScanPage', () => {
     expect(screen.getByRole('button', { name: 'Démarrer la caméra' })).toBeEnabled();
     dropImage();
     await waitFor(() => expect(bodies).toEqual([{ token }]));
+  });
+
+  it('passes a QR code held in front of the camera on once, not once per frame', async () => {
+    serveEvents();
+    const bodies = serveScan('valid');
+    const camera = fakeCamera();
+    renderWithProviders(<ScanPage />, { route: '/scan' });
+    await chooseRockEvent();
+    await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
+    await screen.findByRole('button', { name: 'Arrêter la caméra' });
+
+    await camera.showQr(5);
+
+    expect(await screen.findByRole('status')).toHaveTextContent('VALIDE — entrée autorisée');
+    expect(bodies).toEqual([{ token }]);
+    expect(document.body.innerHTML).not.toContain(token);
+  });
+
+  it('lets the same QR code through again after the camera is stopped and restarted', async () => {
+    serveEvents();
+    const bodies = serveScan('already_used', '2026-11-27T19:04:00Z');
+    const camera = fakeCamera();
+    renderWithProviders(<ScanPage />, { route: '/scan' });
+    await chooseRockEvent();
+    await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
+    await camera.showQr(3);
+    await waitFor(() => expect(bodies).toHaveLength(1));
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Arrêter la caméra' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
+    await screen.findByRole('button', { name: 'Arrêter la caméra' });
+    await camera.showQr(3);
+
+    await waitFor(() => expect(bodies).toEqual([{ token }, { token }]));
+    expect(camera.sessions).toHaveLength(2);
   });
 
   it('shows the unreachable API message instead of an empty page', async () => {
