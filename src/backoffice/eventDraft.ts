@@ -25,10 +25,8 @@ export type EventDraft = {
   tiers: TierDraft[];
 };
 
-/** The body sent to the API: an existing tier keeps its id, a new one has none. */
-export type EventPayload = Omit<EventRequest, 'priceTiers'> & {
-  priceTiers: Array<{ id?: string; label: string; priceCents: number }>;
-};
+/** The body sent to the API: an existing tier keeps its id, a new one has a null id. */
+export type EventPayload = EventRequest;
 
 export type PayloadResult = { payload: EventPayload } | { problems: string[] };
 
@@ -158,30 +156,61 @@ export function parisLocalToIso(local: string): string | null {
   return `${local}:00${formatOffset((wall - first) / 60_000)}`;
 }
 
-/** Converts the form state into the API body, or lists what cannot be converted. */
+/** The API refuses a blank text (spaces only included). */
+const isBlank = (text: string) => text.trim() === '';
+
+/** The texts the API requires, each with the problem shown when it is blank. */
+function blankTextProblems(draft: EventDraft): string[] {
+  const texts: Array<[string, string]> = [
+    [draft.title, 'Titre manquant'],
+    [draft.description, 'Description manquante'],
+    [draft.venue, 'Lieu manquant'],
+  ];
+
+  return texts.filter(([text]) => isBlank(text)).map(([, problem]) => problem);
+}
+
+/** The capacity as a number of seats, or the problem that prevents it. */
+function readCapacity(input: string): number | string {
+  const capacity = /^\d+$/.test(input.trim()) ? Number(input.trim()) : NaN;
+  if (!Number.isSafeInteger(capacity)) {
+    return 'Capacité invalide';
+  }
+
+  return capacity < 1 ? "La capacité doit être d'au moins 1 place" : capacity;
+}
+
+/**
+ * Converts the form state into the API body, or lists what cannot be converted. The checks
+ * mirror the API rules so that the API is only called with a body it can accept.
+ */
 export function toPayload(draft: EventDraft): PayloadResult {
-  const problems: string[] = [];
+  const problems = blankTextProblems(draft);
   const startsAt = parisLocalToIso(draft.startsAt);
   if (startsAt === null) {
     problems.push('Date de début invalide');
   }
-  const capacity = /^\d+$/.test(draft.capacity.trim()) ? Number(draft.capacity.trim()) : NaN;
-  if (!Number.isSafeInteger(capacity)) {
-    problems.push('Capacité invalide');
+  const capacity = readCapacity(draft.capacity);
+  if (typeof capacity === 'string') {
+    problems.push(capacity);
+  }
+  if (draft.tiers.length === 0) {
+    problems.push('Ajoutez au moins un tarif');
   }
   const priceTiers: EventPayload['priceTiers'] = [];
-  for (const tier of draft.tiers) {
+  draft.tiers.forEach((tier, index) => {
     const label = tier.label.trim();
     const priceCents = parseEuros(tier.price);
+    if (label === '') {
+      problems.push(`Libellé manquant pour le tarif ${index + 1}`);
+    }
     if (priceCents === null) {
       problems.push(`Prix invalide pour le tarif « ${label} »`);
     } else {
-      priceTiers.push(
-        tier.id === null ? { label, priceCents } : { id: tier.id, label, priceCents },
-      );
+      priceTiers.push({ id: tier.id, label, priceCents });
     }
-  }
-  if (problems.length > 0 || startsAt === null) {
+  });
+  if (problems.length > 0 || startsAt === null || typeof capacity === 'string') {
     return { problems };
   }
 

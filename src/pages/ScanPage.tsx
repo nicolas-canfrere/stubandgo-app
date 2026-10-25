@@ -41,6 +41,9 @@ function ScanRefusal({ message }: { message: string }) {
   );
 }
 
+/** The scan route answers 403 to whoever does not control the events of the ticket's organization. */
+const SCAN_FORBIDDEN = 'Ce billet ne peut pas être contrôlé avec votre compte.';
+
 function ScanDesk({ organizationSlug }: { organizationSlug: string }) {
   const { signinRedirect } = useAuth();
   const organization = useOrganization(organizationSlug);
@@ -125,7 +128,12 @@ function ScanDesk({ organizationSlug }: { organizationSlug: string }) {
       )}
       {reading && <p className="text-slate-600">Lecture de l'image…</p>}
       {scan.isPending && <p className="text-slate-600">Vérification du billet…</p>}
-      {scan.error && <ProblemNotice problem={scan.error} />}
+      {scan.error && (
+        <ProblemNotice
+          problem={scan.error}
+          message={scan.error.code === 'forbidden' ? SCAN_FORBIDDEN : undefined}
+        />
+      )}
       {scan.error?.code === 'unauthorized' && (
         <button
           type="button"

@@ -143,6 +143,139 @@ describe('PlatformPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Commission invalide');
   });
 
+  it.each([
+    ['an uppercase letter', 'Jazz-Club'],
+    ['a double hyphen', 'jazz--club'],
+    ['a leading hyphen', '-jazz'],
+    ['a space', 'jazz club'],
+    ['fewer than 3 characters', 'jc'],
+    ['more than 64 characters', 'j'.repeat(65)],
+  ])('does not send a slug with %s', async (_name, slug) => {
+    serveOrganizations([]);
+    let called = false;
+    server.use(
+      http.post(organizationsUrl, () => {
+        called = true;
+        return HttpResponse.json(rock, { status: 201 });
+      }),
+    );
+    renderPlatform();
+    await screen.findByRole('heading', { name: 'Organisations' });
+
+    await userEvent.type(screen.getByLabelText('Nom'), 'Jazz Club');
+    await userEvent.type(screen.getByLabelText('Identifiant (slug)'), slug);
+    await userEvent.type(screen.getByLabelText('Commission (%)'), '3');
+    await userEvent.click(screen.getByRole('button', { name: "Créer l'organisation" }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Identifiant invalide : 3 à 64 lettres minuscules, chiffres ou tirets simples entre eux.',
+    );
+    expect(called).toBe(false);
+  });
+
+  it('accepts a slug of exactly 3 and of exactly 64 characters', async () => {
+    serveOrganizations([]);
+    const sent: unknown[] = [];
+    server.use(
+      http.post(organizationsUrl, async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json(rock, { status: 201 });
+      }),
+    );
+    renderPlatform();
+    await screen.findByRole('heading', { name: 'Organisations' });
+
+    for (const slug of ['a1b', `${'a'.repeat(31)}-${'b'.repeat(32)}`]) {
+      await userEvent.type(screen.getByLabelText('Nom'), 'Jazz Club');
+      await userEvent.type(screen.getByLabelText('Identifiant (slug)'), slug);
+      await userEvent.type(screen.getByLabelText('Commission (%)'), '3');
+      await userEvent.click(screen.getByRole('button', { name: "Créer l'organisation" }));
+      await waitFor(() => expect(screen.getByLabelText('Nom')).toHaveValue(''));
+    }
+
+    expect(sent).toEqual([
+      { name: 'Jazz Club', slug: 'a1b', commissionBasisPoints: 300 },
+      {
+        name: 'Jazz Club',
+        slug: `${'a'.repeat(31)}-${'b'.repeat(32)}`,
+        commissionBasisPoints: 300,
+      },
+    ]);
+  });
+
+  it('does not send a blank name', async () => {
+    serveOrganizations([]);
+    let called = false;
+    server.use(
+      http.post(organizationsUrl, () => {
+        called = true;
+        return HttpResponse.json(rock, { status: 201 });
+      }),
+    );
+    renderPlatform();
+    await screen.findByRole('heading', { name: 'Organisations' });
+
+    await userEvent.type(screen.getByLabelText('Nom'), '   ');
+    await userEvent.type(screen.getByLabelText('Identifiant (slug)'), 'jazz-club');
+    await userEvent.type(screen.getByLabelText('Commission (%)'), '3');
+    await userEvent.click(screen.getByRole('button', { name: "Créer l'organisation" }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Nom manquant');
+    expect(called).toBe(false);
+  });
+
+  it('tells a staff member refused by the API that they are not a platform administrator', async () => {
+    serveOrganizations([]);
+    server.use(
+      http.post(organizationsUrl, () =>
+        HttpResponse.json(problemBody('forbidden', 403, 'no'), { status: 403 }),
+      ),
+    );
+    renderPlatform();
+    await screen.findByRole('heading', { name: 'Organisations' });
+
+    await userEvent.type(screen.getByLabelText('Nom'), 'Jazz Club');
+    await userEvent.type(screen.getByLabelText('Identifiant (slug)'), 'jazz-club');
+    await userEvent.type(screen.getByLabelText('Commission (%)'), '3');
+    await userEvent.click(screen.getByRole('button', { name: "Créer l'organisation" }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Votre compte n'a pas le rôle d'administrateur de la plateforme.",
+    );
+    expect(screen.queryByText(/billet/)).not.toBeInTheDocument();
+  });
+
+  it('lists the violations of a malformed payload', async () => {
+    serveOrganizations([]);
+    server.use(
+      http.post(organizationsUrl, () =>
+        HttpResponse.json(
+          {
+            ...problemBody('validation_failed', 422, 'invalid'),
+            violations: [
+              {
+                propertyPath: 'commissionBasisPoints',
+                message: 'This value should be of type int.',
+              },
+            ],
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+    renderPlatform();
+    await screen.findByRole('heading', { name: 'Organisations' });
+
+    await userEvent.type(screen.getByLabelText('Nom'), 'Jazz Club');
+    await userEvent.type(screen.getByLabelText('Identifiant (slug)'), 'jazz-club');
+    await userEvent.type(screen.getByLabelText('Commission (%)'), '3');
+    await userEvent.click(screen.getByRole('button', { name: "Créer l'organisation" }));
+
+    expect(
+      await screen.findByText('commissionBasisPoints : This value should be of type int.'),
+    ).toBeInTheDocument();
+  });
+
   it('explains a slug already taken', async () => {
     serveOrganizations([]);
     server.use(

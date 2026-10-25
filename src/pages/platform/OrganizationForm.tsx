@@ -5,18 +5,34 @@ import { parsePercent } from '../../money';
 
 const inputClass = 'rounded-md border border-slate-300 px-2 py-1';
 
+/** The rule of the API Slug value object: 3 to 64 characters, lowercase words joined by single hyphens. */
+const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const SLUG_PROBLEM =
+  'Identifiant invalide : 3 à 64 lettres minuscules, chiffres ou tirets simples entre eux.';
+const RATE_PROBLEM =
+  'Commission invalide : un pourcentage de 0 à 100, avec deux décimales au plus.';
+
+function isSlug(slug: string): boolean {
+  return slug.length >= 3 && slug.length <= 64 && SLUG.test(slug);
+}
+
 export function OrganizationForm() {
   const create = useCreateOrganization();
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [rate, setRate] = useState('');
-  const [rateError, setRateError] = useState(false);
+  const [problems, setProblems] = useState<string[]>([]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const commissionBasisPoints = parsePercent(rate);
-    setRateError(commissionBasisPoints === null);
-    if (commissionBasisPoints === null) {
+    const found = [
+      ...(name.trim() === '' ? ['Nom manquant'] : []),
+      ...(isSlug(slug.trim()) ? [] : [SLUG_PROBLEM]),
+      ...(commissionBasisPoints === null ? [RATE_PROBLEM] : []),
+    ];
+    setProblems(found);
+    if (found.length > 0 || commissionBasisPoints === null) {
       return;
     }
     create.mutate(
@@ -62,10 +78,12 @@ export function OrganizationForm() {
           required
         />
       </label>
-      {rateError && (
-        <p role="alert" className="text-red-700">
-          Commission invalide : un pourcentage de 0 à 100, avec deux décimales au plus.
-        </p>
+      {problems.length > 0 && (
+        <div role="alert" className="text-red-700">
+          {problems.map((problem) => (
+            <p key={problem}>{problem}</p>
+          ))}
+        </div>
       )}
       {create.error && <StaffProblemNotice problem={create.error} />}
       <button

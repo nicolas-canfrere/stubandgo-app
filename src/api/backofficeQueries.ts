@@ -50,8 +50,16 @@ function useEventMutation<V>(mutationFn: (variables: V) => Promise<BackofficeEve
 }
 
 export function useCreateEvent() {
-  return useEventMutation((body: EventPayload) =>
-    unwrap(api.POST('/api/backoffice/events', { body })),
+  // A new event has new tiers only: the creation body carries no tier id.
+  return useEventMutation(({ priceTiers, ...event }: EventPayload) =>
+    unwrap(
+      api.POST('/api/backoffice/events', {
+        body: {
+          ...event,
+          priceTiers: priceTiers.map(({ label, priceCents }) => ({ label, priceCents })),
+        },
+      }),
+    ),
   );
 }
 
@@ -60,8 +68,7 @@ export function useReviseEvent(eventId: string) {
     unwrap(
       api.PUT('/api/backoffice/events/{eventId}', {
         params: { path: { eventId } },
-        // A tier without `id` is created: the generated type wants the key present (default null).
-        body: body as components['schemas']['EventRequest'],
+        body,
       }),
     ),
   );

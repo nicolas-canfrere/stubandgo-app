@@ -112,6 +112,21 @@ describe('EventListPage', () => {
     expect(await screen.findByText("Aucun événement pour l'instant.")).toBeInTheDocument();
   });
 
+  it('tells a member refused by the API that they are not an administrator of the organization', async () => {
+    server.use(
+      http.get(eventsUrl, () =>
+        HttpResponse.json(problemBody('forbidden', 403, 'no'), { status: 403 }),
+      ),
+    );
+
+    renderWithProviders(<App />, { route: '/espace', user: organizationAdmin });
+
+    expect(
+      await screen.findByText("Votre compte n'est pas administrateur de cette organisation."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/cet événement/)).not.toBeInTheDocument();
+  });
+
   it('shows a translated message when the API cannot be reached', async () => {
     server.use(http.get(eventsUrl, () => HttpResponse.error()));
 

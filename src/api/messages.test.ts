@@ -11,7 +11,9 @@ describe('problemMessage', () => {
     ['payment_declined', 'Paiement refusé, vos places ont été libérées.'],
     ['order_expired', 'Réservation expirée, vos places ont été libérées.'],
     ['unauthorized', 'Votre session a expiré.'],
-    ['forbidden', 'Ce billet ne peut pas être contrôlé avec votre compte.'],
+    ['forbidden', "Votre compte n'a pas accès à cette page."],
+    ['event_without_price_tier', "Ajoutez au moins un tarif avant de publier l'événement."],
+    ['invalid_value', "L'API a refusé une valeur saisie."],
     ['organization_slug_taken', 'Cet identifiant est déjà utilisé par une autre organisation.'],
     ['organization_name_taken', 'Ce nom est déjà utilisé par une autre organisation.'],
     [
@@ -34,6 +36,18 @@ describe('problemMessage', () => {
     ['something_else', 'Une erreur est survenue. Réessayez.'],
   ])('translates %s', (code, expected) => {
     expect(message(code)).toBe(expected);
+  });
+
+  it('shows the detail of an invalid value', () => {
+    expect(
+      problemMessage(
+        new ApiProblem({
+          code: 'invalid_value',
+          status: 422,
+          detail: 'Event description must not be blank.',
+        }),
+      ),
+    ).toBe("L'API a refusé une valeur saisie : Event description must not be blank.");
   });
 
   it('names the configured API URL when unreachable', () => {

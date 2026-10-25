@@ -36,7 +36,7 @@ function EventDetail({ eventId }: { eventId: string }) {
     return <p className="text-slate-600">Chargement…</p>;
   }
   if (event.isError) {
-    return <BackofficeProblemNotice problem={event.error} />;
+    return <BackofficeProblemNotice problem={event.error} subject="event" />;
   }
 
   // Keyed by content: a saved, published or unpublished event resets the form to the API state.
@@ -79,18 +79,14 @@ function EventForm({ event }: { event: BackofficeEvent | null }) {
     }
   };
   const change = (patch: Partial<EventDraft>) => setDraft({ ...draft, ...patch });
-  const textField = (
-    label: string,
-    field: 'title' | 'description' | 'venue' | 'capacity',
-    required = true,
-  ) => (
+  const textField = (label: string, field: 'title' | 'description' | 'venue' | 'capacity') => (
     <label className="flex flex-col gap-1">
       {label}
       <input
         className={inputClass}
         value={draft[field]}
         onChange={(e) => change({ [field]: e.target.value })}
-        required={required}
+        required
       />
     </label>
   );
@@ -108,7 +104,7 @@ function EventForm({ event }: { event: BackofficeEvent | null }) {
       )}
       <fieldset disabled={reason !== null} className="flex flex-col gap-3">
         {textField('Titre', 'title')}
-        {textField('Description', 'description', false)}
+        {textField('Description', 'description')}
         {textField('Lieu', 'venue')}
         <label className="flex flex-col gap-1">
           Début (heure de Paris)
@@ -185,7 +181,13 @@ function EventForm({ event }: { event: BackofficeEvent | null }) {
       )}
       {[save, publish, unpublish].map(
         (mutation, index) =>
-          mutation.error && <BackofficeProblemNotice key={index} problem={mutation.error} />,
+          mutation.error && (
+            <BackofficeProblemNotice
+              key={index}
+              problem={mutation.error}
+              subject={event === null ? 'organization' : 'event'}
+            />
+          ),
       )}
       <div className="flex items-center gap-4">
         {reason === null && (

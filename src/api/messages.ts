@@ -6,7 +6,9 @@ const MESSAGES: Record<string, string> = {
   order_too_large: '10 billets maximum par commande.',
   payment_declined: 'Paiement refusé, vos places ont été libérées.',
   unauthorized: 'Votre session a expiré.',
-  forbidden: 'Ce billet ne peut pas être contrôlé avec votre compte.',
+  forbidden: "Votre compte n'a pas accès à cette page.",
+  invalid_value: "L'API a refusé une valeur saisie.",
+  event_without_price_tier: "Ajoutez au moins un tarif avant de publier l'événement.",
   organization_slug_taken: 'Cet identifiant est déjà utilisé par une autre organisation.',
   organization_name_taken: 'Ce nom est déjà utilisé par une autre organisation.',
   organization_not_active:
@@ -30,6 +32,11 @@ export function codeMessage(code: string): string {
 export function problemMessage(problem: ApiProblem): string {
   if (problem.code === UNREACHABLE_CODE) {
     return `L'API ne répond pas sur ${API_URL} — la stack de l'API est-elle lancée ?`;
+  }
+
+  // The API names the refused value in the detail (in English): it is the only precise hint.
+  if (problem.code === 'invalid_value' && problem.detail !== '') {
+    return `L'API a refusé une valeur saisie : ${problem.detail}`;
   }
 
   return codeMessage(problem.code);

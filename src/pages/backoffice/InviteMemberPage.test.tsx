@@ -42,6 +42,7 @@ describe('InviteMemberPage', () => {
       502,
       "Le fournisseur d'identité ne répond pas. Réessayez dans un instant.",
     ],
+    ['forbidden', 403, "Votre compte n'est pas administrateur de cette organisation."],
   ])('translates %s', async (code, status, message) => {
     server.use(
       http.post(invitationsUrl, () =>

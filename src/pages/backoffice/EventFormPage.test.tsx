@@ -75,6 +75,7 @@ describe('EventFormPage creation', () => {
       capacity: 120,
       priceTiers: [{ label: 'Plein', priceCents: 1250 }],
     });
+    expect(sent).not.toHaveProperty(['priceTiers', 0, 'id']);
     expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeInTheDocument();
     // The detail shows the created event at once, then refreshes it: let that read finish.
     await waitFor(() => expect(detailReads).toBe(1));
@@ -110,6 +111,90 @@ describe('EventFormPage creation', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Prix invalide pour le tarif « Plein »');
     expect(called).toBe(false);
+  });
+
+  it('requires a description', () => {
+    renderEvent('/espace/events/new');
+
+    expect(screen.getByLabelText('Description')).toBeRequired();
+  });
+
+  it.each([
+    ['a blank description', 'Description', '   ', 'Description manquante'],
+    ['a capacity of zero', 'Capacité', '0', "La capacité doit être d'au moins 1 place"],
+    ['a blank tier label', 'Libellé du tarif 1', '  ', 'Libellé manquant pour le tarif 1'],
+  ])('refuses %s without calling the API', async (_name, field, value, problem) => {
+    let called = false;
+    server.use(
+      http.post(eventsUrl, () => {
+        called = true;
+        return HttpResponse.json(draftEvent, { status: 201 });
+      }),
+    );
+    renderEvent('/espace/events/new');
+    await fillNewEvent();
+    await userEvent.clear(screen.getByLabelText(field));
+    await userEvent.type(screen.getByLabelText(field), value);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Créer' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(problem);
+    expect(called).toBe(false);
+  });
+
+  it('refuses an event without any tier without calling the API', async () => {
+    let called = false;
+    server.use(
+      http.post(eventsUrl, () => {
+        called = true;
+        return HttpResponse.json(draftEvent, { status: 201 });
+      }),
+    );
+    renderEvent('/espace/events/new');
+    await fillNewEvent();
+    await userEvent.click(screen.getByRole('button', { name: 'Retirer le tarif 1' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Créer' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Ajoutez au moins un tarif');
+    expect(called).toBe(false);
+  });
+
+  it('shows the detail of a value the API refuses', async () => {
+    server.use(
+      http.post(eventsUrl, () =>
+        HttpResponse.json(
+          problemBody('invalid_value', 422, 'Event title must not exceed 120 characters.'),
+          { status: 422 },
+        ),
+      ),
+    );
+    renderEvent('/espace/events/new');
+    await fillNewEvent();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Créer' }));
+
+    expect(
+      await screen.findByText(
+        "L'API a refusé une valeur saisie : Event title must not exceed 120 characters.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('tells a member refused by the API that they are not an administrator', async () => {
+    server.use(
+      http.post(eventsUrl, () =>
+        HttpResponse.json(problemBody('forbidden', 403, 'no'), { status: 403 }),
+      ),
+    );
+    renderEvent('/espace/events/new');
+    await fillNewEvent();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Créer' }));
+
+    expect(
+      await screen.findByText("Votre compte n'est pas administrateur de cette organisation."),
+    ).toBeInTheDocument();
   });
 
   it('shows the API refusal of a start date in the past', async () => {
@@ -152,7 +237,7 @@ describe('EventFormPage revision', () => {
       priceTiers: [
         { id: draftEvent.priceTiers[0]?.id, label: 'Plein', priceCents: 3000 },
         { id: draftEvent.priceTiers[1]?.id, label: 'Réduit', priceCents: 1500 },
-        { label: 'VIP', priceCents: 4000 },
+        { id: null, label: 'VIP', priceCents: 4000 },
       ],
     });
     expect(await screen.findByDisplayValue('Soirée Rock 2')).toBeInTheDocument();
@@ -255,6 +340,7 @@ describe('EventFormPage publication', () => {
       "Des places ont été prises : l'événement ne peut plus être modifié ni dépublié.",
     ],
     ['event_already_published', 409, "L'événement est déjà publié."],
+    ['event_without_price_tier', 422, "Ajoutez au moins un tarif avant de publier l'événement."],
     ['event_start_in_past', 422, 'La date de début est déjà passée.'],
   ])('translates the refusal %s on publication', async (code, status, message) => {
     serveEvent(draftEvent);

@@ -14,7 +14,7 @@ export function EventSalesPage() {
         Retour à l'événement
       </Link>
       {sales.isPending && <p className="text-slate-600">Chargement…</p>}
-      {sales.isError && <BackofficeProblemNotice problem={sales.error} />}
+      {sales.isError && <BackofficeProblemNotice problem={sales.error} subject="event" />}
       {sales.isSuccess && (
         <>
           <table className="w-full text-left">

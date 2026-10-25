@@ -40,7 +40,10 @@ Intended structure (later tasks add the folders that do not exist yet):
 - `src/pages/`: one component per route; `pages/platform/` is the staff space (`/plateforme`),
   `pages/backoffice/` the organization space (`/espace`, administrators only).
 - `src/backoffice/eventDraft.ts`: the event form state and its conversion to the API body (euros
-  to cents, Europe/Paris local time to an ISO 8601 date-time with offset).
+  to cents, Europe/Paris local time to an ISO 8601 date-time with offset). The back-office forms
+  check the API's input rules (non-blank texts, capacity of at least 1, at least one tier, slug
+  format) only to answer in French before the call; the API stays the authority, and a refusal it
+  still sends (`invalid_value`) is shown with its `detail`.
 - `src/components/`: reusable presentational components.
 - `src/orders/`: order and payment flow.
 - `src/scan/`: QR code scan (camera and image).

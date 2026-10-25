@@ -156,12 +156,12 @@ describe('toPayload', () => {
         venue: 'La Cigale',
         startsAt: '2026-12-01T20:00:00+01:00',
         capacity: 200,
-        priceTiers: [{ label: 'Plein', priceCents: 1250 }],
+        priceTiers: [{ id: null, label: 'Plein', priceCents: 1250 }],
       },
     });
   });
 
-  it('keeps the id of an existing tier and omits it for a new one', () => {
+  it('keeps the id of an existing tier and sends a null id for a new one', () => {
     const base = draftFromEvent(event);
     const withNew = toPayload({
       ...base,
@@ -173,11 +173,10 @@ describe('toPayload', () => {
         priceTiers: [
           { id: '01JAE5Z8Q3M4N6P7R8S9T0V2A1', label: 'Plein', priceCents: 2500 },
           { id: '01JAE5Z8Q3M4N6P7R8S9T0V2A2', label: 'Gratuit', priceCents: 0 },
-          { label: 'VIP', priceCents: 4000 },
+          { id: null, label: 'VIP', priceCents: 4000 },
         ],
       },
     });
-    expect('payload' in withNew && 'id' in (withNew.payload.priceTiers[2] ?? {})).toBe(false);
   });
 
   it('trims the texts', () => {
@@ -205,6 +204,16 @@ describe('toPayload', () => {
       'Prix invalide pour le tarif « Plein »',
     ],
     ['a fractional capacity', { capacity: '1,5' }, 'Capacité invalide'],
+    ['a capacity of zero', { capacity: '0' }, "La capacité doit être d'au moins 1 place"],
+    ['a blank title', { title: '   ' }, 'Titre manquant'],
+    ['a blank description', { description: ' \t ' }, 'Description manquante'],
+    ['a blank venue', { venue: '' }, 'Lieu manquant'],
+    [
+      'a blank tier label',
+      { tiers: [{ key: 'a', id: null, label: '  ', price: '10' }] },
+      'Libellé manquant pour le tarif 1',
+    ],
+    ['no tier at all', { tiers: [] }, 'Ajoutez au moins un tarif'],
     ['an empty capacity', { capacity: '' }, 'Capacité invalide'],
     ['an impossible date', { startsAt: '2026-03-29T02:30' }, 'Date de début invalide'],
   ] as Array<[string, Partial<EventDraft>, string]>)('refuses %s', (_name, overrides, problem) => {

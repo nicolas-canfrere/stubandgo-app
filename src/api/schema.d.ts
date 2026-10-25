@@ -62,7 +62,7 @@ export interface paths {
         get: operations["get_catalog_backoffice_get_event"];
         /**
          * Replace every field of a draft event, its price tiers included.
-         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). Only an unlocked draft can be revised. A tier with the identifier of a tier of the event is kept, one without identifier is created, one missing from the list is deleted.
+         * @description Requires the Keycloak access token of an administrator of an organization (realm role organization-admin). Only an unlocked draft can be revised. A tier with the identifier of a tier of the event is kept, one without identifier (or with a null one) is created, one missing from the list is deleted; any other identifier is refused.
          */
         put: operations["put_catalog_backoffice_revise_event"];
         post?: never;
@@ -606,7 +606,7 @@ export interface components {
              */
             priceCents: number;
             /**
-             * @description ULID of an existing tier of the event, to keep it; omitted, a new tier is created.
+             * @description ULID of an existing tier of the event, to keep it; null or omitted, a new tier is created. Any other identifier is refused (422 /problems/invalid_value).
              * @default null
              */
             id: string | null;
@@ -924,7 +924,7 @@ export interface operations {
                     "application/json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Malformed payload (/problems/validation_failed) or a value that breaks a rule: /problems/invalid_value (including a tier of another event), or /problems/event_start_in_past. */
+            /** @description Malformed payload (/problems/validation_failed) or a value that breaks a rule: /problems/invalid_value (including a tier identifier that is not one of a tier of the event), or /problems/event_start_in_past. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -1320,11 +1320,9 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The organization was created, active or pending_keycloak; its URL is in the Location header. */
+            /** @description The organization was created, active or pending_keycloak. */
             201: {
                 headers: {
-                    /** @description URL of the organization. */
-                    Location?: string;
                     [name: string]: unknown;
                 };
                 content: {
