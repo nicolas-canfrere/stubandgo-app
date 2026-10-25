@@ -4,7 +4,7 @@ import {
   type InviteMemberBody,
   type PlatformOrganization,
 } from '../../api/platformQueries';
-import { ProblemNotice } from '../../components/ProblemNotice';
+import { StaffProblemNotice } from './StaffProblemNotice';
 
 const inputClass = 'rounded-md border border-slate-300 px-2 py-1';
 
@@ -79,7 +79,7 @@ export function InviteMemberForm({ organizations }: { organizations: PlatformOrg
           Invitation envoyée à {invitedEmail}.
         </p>
       )}
-      {invite.error && <ProblemNotice problem={invite.error} />}
+      {invite.error && <StaffProblemNotice problem={invite.error} />}
       <button
         type="submit"
         disabled={invite.isPending}

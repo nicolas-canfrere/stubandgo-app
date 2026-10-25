@@ -13,12 +13,22 @@ describe('parseEuros', () => {
     expect(parseEuros(input)).toBe(cents);
   });
 
-  it.each(['12,555', '-5', '', ' ', 'abc', '12,', ',5', '1e3', '12 €', '1,2,3'])(
-    'rejects %j',
-    (input) => {
-      expect(parseEuros(input)).toBeNull();
-    },
-  );
+  it.each([
+    '12,555',
+    '9007199254740991',
+    '99999999999999999999',
+    '-5',
+    '',
+    ' ',
+    'abc',
+    '12,',
+    ',5',
+    '1e3',
+    '12 €',
+    '1,2,3',
+  ])('rejects %j', (input) => {
+    expect(parseEuros(input)).toBeNull();
+  });
 });
 
 describe('parsePercent', () => {

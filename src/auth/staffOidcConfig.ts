@@ -9,7 +9,7 @@ const clientId: string = import.meta.env.VITE_STAFF_OIDC_CLIENT_ID ?? 'stubandgo
 export const staffOidcConfig = {
   authority,
   client_id: clientId,
-  redirect_uri: `${window.location.origin}/plateforme/callback`,
+  redirect_uri: `${window.location.origin}/plateforme/auth/callback`,
   post_logout_redirect_uri: `${window.location.origin}/`,
   scope: 'openid profile email',
   automaticSilentRenew: true,

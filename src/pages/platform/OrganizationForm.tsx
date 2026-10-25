@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useCreateOrganization } from '../../api/platformQueries';
-import { ProblemNotice } from '../../components/ProblemNotice';
+import { StaffProblemNotice } from './StaffProblemNotice';
 import { parsePercent } from '../../money';
 
 const inputClass = 'rounded-md border border-slate-300 px-2 py-1';
@@ -67,7 +67,7 @@ export function OrganizationForm() {
           Commission invalide : un pourcentage de 0 à 100, avec deux décimales au plus.
         </p>
       )}
-      {create.error && <ProblemNotice problem={create.error} />}
+      {create.error && <StaffProblemNotice problem={create.error} />}
       <button
         type="submit"
         disabled={create.isPending}

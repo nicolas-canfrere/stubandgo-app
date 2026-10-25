@@ -16,6 +16,8 @@ setAccessTokenSources({
 });
 // The staff realm has its own provider (scoped to /plateforme) and its own callback: the
 // organizations provider must leave that callback alone.
+// Computed once: a sign-in callback is a full page load (redirect from Keycloak), so the path at
+// load time is the one that matters.
 const isStaffSpace = window.location.pathname.startsWith('/plateforme');
 const root = document.getElementById('root');
 

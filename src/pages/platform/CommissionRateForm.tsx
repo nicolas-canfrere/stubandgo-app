@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useChangeCommissionRate, type PlatformOrganization } from '../../api/platformQueries';
-import { ProblemNotice } from '../../components/ProblemNotice';
+import { StaffProblemNotice } from './StaffProblemNotice';
 import { parsePercent } from '../../money';
 
 /** The current rate as typed in a field: basis points to percent, with a decimal comma. */
@@ -45,7 +45,7 @@ export function CommissionRateForm({ organization }: { organization: PlatformOrg
           Taux invalide (0 à 100, deux décimales au plus).
         </span>
       )}
-      {change.error && <ProblemNotice problem={change.error} />}
+      {change.error && <StaffProblemNotice problem={change.error} />}
     </form>
   );
 }

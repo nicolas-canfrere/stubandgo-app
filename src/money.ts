@@ -16,8 +16,13 @@ function parseHundredths(input: string): { whole: number; hundredths: number } |
 /** Parses an amount in euros into cents; null when negative, malformed or with over two decimals. */
 export function parseEuros(input: string): number | null {
   const parsed = parseHundredths(input);
+  if (parsed === null) {
+    return null;
+  }
+  const cents = parsed.whole * 100 + parsed.hundredths;
 
-  return parsed === null ? null : parsed.whole * 100 + parsed.hundredths;
+  // Beyond 2^53 an integer is no longer exact: such an amount is refused, not rounded.
+  return Number.isSafeInteger(cents) ? cents : null;
 }
 
 /** Parses a percentage (0 to 100, two decimals at most) into basis points; null otherwise. */

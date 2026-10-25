@@ -12,6 +12,8 @@ type Route = string | { pathname: string; state?: unknown };
 export type TestUser = {
   name: string;
   accessToken?: string;
+  /** The staff realm's token when it differs from the organizations' one. */
+  platformAccessToken?: string;
   claims?: Record<string, unknown>;
   /** The state given to signinRedirect, handed back on the callback. */
   state?: unknown;
@@ -26,7 +28,10 @@ export function renderWithProviders(
   });
   const accessToken = user?.accessToken ?? 'test-access-token';
   const token = async () => (user ? accessToken : null);
-  setAccessTokenSources({ organizations: token, platform: token });
+  setAccessTokenSources({
+    organizations: token,
+    platform: async () => (user ? (user.platformAccessToken ?? accessToken) : null),
+  });
   const auth = {
     isLoading: false,
     isAuthenticated: user !== undefined,

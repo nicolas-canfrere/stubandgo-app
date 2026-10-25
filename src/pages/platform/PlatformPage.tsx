@@ -2,7 +2,7 @@ import { useProvisionOrganization, usePlatformOrganizations } from '../../api/pl
 import { readMember } from '../../auth/member';
 import { RequireLogin } from '../../auth/RequireLogin';
 import { AccountMenu } from '../../components/AccountMenu';
-import { ProblemNotice } from '../../components/ProblemNotice';
+import { StaffProblemNotice } from './StaffProblemNotice';
 import { formatPercent } from '../../money';
 import { useAuth } from 'react-oidc-context';
 import { CommissionRateForm } from './CommissionRateForm';
@@ -24,9 +24,14 @@ function PlatformSpace() {
 
   if (!member?.isPlatformAdmin) {
     return (
-      <p role="alert" className="text-red-700">
-        Votre compte n'a pas le rôle d'administrateur de la plateforme.
-      </p>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center">
+          <AccountMenu />
+        </div>
+        <p role="alert" className="text-red-700">
+          Votre compte n'a pas le rôle d'administrateur de la plateforme.
+        </p>
+      </div>
     );
   }
 
@@ -49,7 +54,7 @@ function OrganizationList() {
     return <p className="text-slate-600">Chargement…</p>;
   }
   if (organizations.isError) {
-    return <ProblemNotice problem={organizations.error} />;
+    return <StaffProblemNotice problem={organizations.error} />;
   }
 
   return (
@@ -99,7 +104,7 @@ function OrganizationList() {
             ))}
           </tbody>
         </table>
-        {provision.error && <ProblemNotice problem={provision.error} />}
+        {provision.error && <StaffProblemNotice problem={provision.error} />}
       </section>
       <OrganizationForm />
       <InviteMemberForm organizations={organizations.data} />

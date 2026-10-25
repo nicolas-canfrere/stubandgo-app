@@ -65,6 +65,32 @@ describe('PlatformPage', () => {
     expect(screen.queryByRole('heading', { name: 'Organisations' })).not.toBeInTheDocument();
   });
 
+  it('offers the staff sign-in again, with the staff token, when the staff session expired', async () => {
+    const seen: Array<string | null> = [];
+    server.use(
+      http.get(organizationsUrl, ({ request }) => {
+        seen.push(request.headers.get('Authorization'));
+        return HttpResponse.json(problemBody('unauthorized', 401, 'expired'), { status: 401 });
+      }),
+    );
+    const { auth } = renderPlatform({
+      user: { ...staff, accessToken: 'org-token', platformAccessToken: 'staff-token' },
+    });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Se reconnecter' }));
+
+    expect(seen).toEqual(['Bearer staff-token']);
+    expect(auth.signinRedirect).toHaveBeenCalledExactlyOnceWith({ state: '/plateforme' });
+  });
+
+  it('lets a member without the platform-admin role sign out', async () => {
+    const { auth } = renderPlatform({ user: { name: 'Camille', claims: {} } });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
+
+    expect(auth.signoutRedirect).toHaveBeenCalled();
+  });
+
   it('lists the organizations with their commission and status, using the staff token', async () => {
     const { authorizations } = serveOrganizations([rock, fanfare]);
 

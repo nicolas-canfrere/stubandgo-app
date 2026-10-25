@@ -65,7 +65,7 @@ export function App() {
               }
             >
               <Route index element={<PlatformPage />} />
-              <Route path="callback" element={<StaffAuthCallbackPage />} />
+              <Route path="auth/callback" element={<StaffAuthCallbackPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
