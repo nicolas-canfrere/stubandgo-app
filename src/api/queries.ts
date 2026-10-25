@@ -63,3 +63,38 @@ function fetchAvailability(eventId: string) {
 function placeOrder(body: PlaceOrderBody) {
   return unwrap(api.POST('/api/orders', { body }));
 }
+
+export function useOrder(id: string) {
+  return useQuery<Awaited<ReturnType<typeof fetchOrder>>, ApiProblem>({
+    queryKey: ['orders', id],
+    queryFn: () => fetchOrder(id),
+  });
+}
+
+/** Pays an order; the order is refetched, and the seats too when the payment failed. */
+export function usePayOrder(orderId: string, eventId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<Awaited<ReturnType<typeof payOrder>>, ApiProblem, string>({
+    mutationFn: (cardNumber) => payOrder(orderId, cardNumber),
+    onSettled: async (_data, error) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders', orderId] }),
+        error ? queryClient.invalidateQueries({ queryKey: ['availability', eventId] }) : undefined,
+      ]);
+    },
+  });
+}
+
+function fetchOrder(orderId: string) {
+  return unwrap(api.GET('/api/orders/{orderId}', { params: { path: { orderId } } }));
+}
+
+function payOrder(orderId: string, cardNumber: string) {
+  return unwrap(
+    api.POST('/api/orders/{orderId}/payment', {
+      params: { path: { orderId } },
+      body: { cardNumber },
+    }),
+  );
+}

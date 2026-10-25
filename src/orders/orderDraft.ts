@@ -19,3 +19,22 @@ export function readOrderDraft(state: unknown): OrderDraft | null {
 
   return { buyerEmail, quantities: Object.fromEntries(entries) as Record<string, number> };
 }
+
+type OrderLines = { priceTierId?: string; quantity?: number }[];
+
+/** Navigation state when present, otherwise the quantities of the order lines and no email. */
+export function draftForOrder(state: unknown, lines: OrderLines): OrderDraft {
+  const fromState = readOrderDraft(state);
+  if (fromState !== null) {
+    return fromState;
+  }
+
+  const quantities: Record<string, number> = {};
+  for (const line of lines) {
+    if (line.priceTierId !== undefined) {
+      quantities[line.priceTierId] = line.quantity ?? 0;
+    }
+  }
+
+  return { buyerEmail: '', quantities };
+}
