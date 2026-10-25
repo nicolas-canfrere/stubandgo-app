@@ -1,4 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Route, Routes } from 'react-router-dom';
+import { HomePage } from './pages/HomePage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { OrganizationPage } from './pages/OrganizationPage';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'font-semibold text-indigo-700' : 'text-slate-600 hover:text-slate-900';
@@ -17,7 +20,13 @@ export function App() {
           </NavLink>
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6" />
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/o/:slug" element={<OrganizationPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
     </div>
   );
 }

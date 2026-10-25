@@ -13,4 +13,10 @@ describe('App', () => {
       '/scan',
     );
   });
+
+  it('renders the not found page on an unknown route', () => {
+    renderWithProviders(<App />, { route: '/nimporte-quoi' });
+
+    expect(screen.getByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
+  });
 });
