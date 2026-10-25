@@ -12,6 +12,7 @@ test('testControllerOfAnotherOrganizationDoesNotSeeTheEvent: Théâtre de la Vil
   await expect(page.getByRole('heading', { level: 1, name: "Contrôle d'accès" })).toBeVisible();
   await expect(page.getByText(/^Organisation contrôlée : /)).toBeVisible();
   await expect(page.getByLabel('Événement contrôlé')).toBeVisible();
+  await expect(page.getByRole('option', { name: /^Le Malade imaginaire — / })).toHaveCount(1);
   await expect(page.getByRole('option', { name: new RegExp(`^${DEMO_EVENT} — `) })).toHaveCount(0);
 });
 
