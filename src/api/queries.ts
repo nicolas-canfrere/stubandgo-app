@@ -98,3 +98,19 @@ function payOrder(orderId: string, cardNumber: string) {
     }),
   );
 }
+
+export type ScanVerdict = Awaited<ReturnType<typeof scanTicket>>;
+export type ScanOutcome = ScanVerdict['outcome'];
+
+/** Scans a ticket token at the gate of an event; the token is a bearer secret, never logged. */
+export function useScanTicket(eventId: string) {
+  return useMutation<ScanVerdict, ApiProblem, string>({
+    mutationFn: (token) => scanTicket(eventId, token),
+  });
+}
+
+function scanTicket(eventId: string, token: string) {
+  return unwrap(
+    api.POST('/api/events/{eventId}/scans', { params: { path: { eventId } }, body: { token } }),
+  );
+}
