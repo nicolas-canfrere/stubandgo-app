@@ -5,6 +5,11 @@ import { App } from './App';
 import { renderWithProviders } from './test/render';
 import { server } from './test/server';
 
+// The home page, rendered at `/`, lists the upcoming events.
+beforeEach(() => {
+  server.use(http.get(`${API_URL}/api/events`, () => HttpResponse.json([])));
+});
+
 describe('App', () => {
   it('shows the navigation bar with the events and access control links', () => {
     renderWithProviders(<App />);
@@ -59,6 +64,10 @@ describe('App platform space', () => {
     expect(within(nav).getByRole('link', { name: 'Plateforme' })).toHaveAttribute(
       'href',
       '/plateforme',
+    );
+    expect(within(nav).getByRole('link', { name: 'Espace organisation' })).toHaveAttribute(
+      'href',
+      '/espace',
     );
   });
 });

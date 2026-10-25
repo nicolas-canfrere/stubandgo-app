@@ -23,6 +23,14 @@ describe('problemMessage', () => {
       'identity_provider_unavailable',
       "Le fournisseur d'identité ne répond pas. Réessayez dans un instant.",
     ],
+    [
+      'event_locked',
+      "Des places ont été prises : l'événement ne peut plus être modifié ni dépublié.",
+    ],
+    ['event_not_draft', "L'événement est publié : dépubliez-le avant de le modifier."],
+    ['event_not_published', "L'événement n'est pas publié."],
+    ['event_already_published', "L'événement est déjà publié."],
+    ['event_start_in_past', 'La date de début est déjà passée.'],
     ['something_else', 'Une erreur est survenue. Réessayez.'],
   ])('translates %s', (code, expected) => {
     expect(message(code)).toBe(expected);

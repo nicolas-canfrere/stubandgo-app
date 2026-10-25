@@ -14,13 +14,23 @@ const MESSAGES: Record<string, string> = {
   member_already_exists: 'Ce membre existe déjà : cette adresse email a déjà un compte.',
   identity_provider_unavailable:
     "Le fournisseur d'identité ne répond pas. Réessayez dans un instant.",
+  event_locked: "Des places ont été prises : l'événement ne peut plus être modifié ni dépublié.",
+  event_not_draft: "L'événement est publié : dépubliez-le avant de le modifier.",
+  event_not_published: "L'événement n'est pas publié.",
+  event_already_published: "L'événement est déjà publié.",
+  event_start_in_past: 'La date de début est déjà passée.',
   order_expired: 'Réservation expirée, vos places ont été libérées.',
 };
+
+/** The French message of a problem code; a generic one for a code nobody translated. */
+export function codeMessage(code: string): string {
+  return MESSAGES[code] ?? 'Une erreur est survenue. Réessayez.';
+}
 
 export function problemMessage(problem: ApiProblem): string {
   if (problem.code === UNREACHABLE_CODE) {
     return `L'API ne répond pas sur ${API_URL} — la stack de l'API est-elle lancée ?`;
   }
 
-  return MESSAGES[problem.code] ?? 'Une erreur est survenue. Réessayez.';
+  return codeMessage(problem.code);
 }

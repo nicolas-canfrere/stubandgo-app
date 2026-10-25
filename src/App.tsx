@@ -10,6 +10,11 @@ import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OrganizationPage } from './pages/OrganizationPage';
 import { PaymentPage } from './pages/PaymentPage';
+import { BackofficePage } from './pages/backoffice/BackofficePage';
+import { EventFormPage } from './pages/backoffice/EventFormPage';
+import { EventListPage } from './pages/backoffice/EventListPage';
+import { EventSalesPage } from './pages/backoffice/EventSalesPage';
+import { InviteMemberPage } from './pages/backoffice/InviteMemberPage';
 import { PlatformPage } from './pages/platform/PlatformPage';
 import { StaffAuthCallbackPage } from './pages/StaffAuthCallbackPage';
 
@@ -32,6 +37,9 @@ export function App() {
           </NavLink>
           <NavLink to="/scan" className={linkClass}>
             Contrôle d'accès
+          </NavLink>
+          <NavLink to="/espace" className={linkClass}>
+            Espace organisation
           </NavLink>
           <NavLink to="/plateforme" className={linkClass}>
             Plateforme
@@ -56,6 +64,13 @@ export function App() {
                 </RequireLogin>
               }
             />
+            <Route path="/espace" element={<BackofficePage />}>
+              <Route index element={<EventListPage />} />
+              <Route path="events/new" element={<EventFormPage />} />
+              <Route path="events/:eventId" element={<EventFormPage />} />
+              <Route path="events/:eventId/sales" element={<EventSalesPage />} />
+              <Route path="invitations" element={<InviteMemberPage />} />
+            </Route>
             <Route
               path="/plateforme"
               element={

@@ -54,3 +54,26 @@ export const rockEventDetail: EventDetail = {
     { id: gratuitTierId, label: 'Gratuit', priceCents: 0 },
   ],
 };
+
+type BackofficeEvent = components['schemas']['BackofficeEvent'];
+
+/** A member of Rock Asso who administers the organization (realm stubandgo). */
+export const organizationAdmin = {
+  name: 'Alex Admin',
+  claims: {
+    organization: { 'demo-rock-asso': {} },
+    realm_access: { roles: ['organization-admin'] },
+  },
+};
+
+export const draftEvent: BackofficeEvent = {
+  id: rockEvent.id,
+  title: 'Soirée Rock',
+  description: 'Une soirée rock à La Cigale.',
+  venue: 'La Cigale',
+  startsAt: '2026-11-25T19:00:00Z',
+  capacity: 200,
+  status: 'draft',
+  locked: false,
+  priceTiers: rockEventDetail.priceTiers,
+};

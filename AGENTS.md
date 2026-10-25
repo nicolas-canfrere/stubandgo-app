@@ -37,7 +37,10 @@ Intended structure (later tasks add the folders that do not exist yet):
   (`src/api/client.ts`); never log them.
 - `src/money.ts`: parsers for typed amounts (`parseEuros`, `parsePercent`, integer cents and
   basis points) and `formatPercent`; `formatEuros` stays in `src/format.ts`.
-- `src/pages/`: one component per route.
+- `src/pages/`: one component per route; `pages/platform/` is the staff space (`/plateforme`),
+  `pages/backoffice/` the organization space (`/espace`, administrators only).
+- `src/backoffice/eventDraft.ts`: the event form state and its conversion to the API body (euros
+  to cents, Europe/Paris local time to an ISO 8601 date-time with offset).
 - `src/components/`: reusable presentational components.
 - `src/orders/`: order and payment flow.
 - `src/scan/`: QR code scan (camera and image).
