@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { API_URL } from '../api/client';
 import {
   pleinTierId,
@@ -12,6 +13,7 @@ import {
 } from '../test/fixtures';
 import { renderWithProviders } from '../test/render';
 import { server } from '../test/server';
+import { readOrderDraft } from '../orders/orderDraft';
 import { NotFoundPage } from './NotFoundPage';
 import { EventPage } from './EventPage';
 
@@ -36,7 +38,14 @@ function serveEvent(remaining: number | (() => number) = 198) {
   );
 }
 
+let navigationState: unknown;
+
 function Location({ label }: { label: string }) {
+  const { state } = useLocation();
+  useEffect(() => {
+    navigationState = state;
+  }, [state]);
+
   return <p>{label}</p>;
 }
 
@@ -98,6 +107,10 @@ describe('EventPage', () => {
       buyerEmail: 'buyer@example.com',
       lines: [{ priceTierId: pleinTierId, quantity: 2 }],
     });
+    expect(readOrderDraft(navigationState)).toEqual({
+      buyerEmail: 'buyer@example.com',
+      quantities: { [pleinTierId]: 2 },
+    });
   });
 
   it('goes to the order page when the order is already paid', async () => {
@@ -144,7 +157,9 @@ describe('EventPage', () => {
     server.use(
       http.post(`${API_URL}/api/orders`, () =>
         problem('validation_failed', 422, 'Invalid.', {
-          violations: [{ propertyPath: 'buyerEmail', message: 'Email invalide.' }],
+          violations: [
+            { propertyPath: 'buyerEmail', message: 'This value is not a valid email address.' },
+          ],
         }),
       ),
     );
@@ -155,8 +170,11 @@ describe('EventPage', () => {
     await user.type(screen.getByLabelText('Email'), 'nope');
     await user.click(screen.getByRole('button', { name: 'Réserver et payer' }));
 
-    expect(await screen.findByText('Email invalide.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('Email invalide.');
+    expect(await screen.findByText('Saisissez une adresse email valide.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(
+      /Saisissez une adresse email valide\./,
+    );
+    expect(screen.queryByText('This value is not a valid email address.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Réserver et payer' })).toBeEnabled();
   });
 

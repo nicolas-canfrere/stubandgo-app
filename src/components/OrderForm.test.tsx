@@ -42,7 +42,10 @@ describe('OrderForm', () => {
     renderForm();
     const button = screen.getByRole('button', { name: 'Réserver et payer' });
 
-    expect(screen.getByText('10 billets maximum par commande')).toBeInTheDocument();
+    expect(
+      screen.getByText('Au moins un billet, 10 billets maximum par commande.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Une adresse email valide est requise.')).toBeInTheDocument();
     expect(button).toBeDisabled();
 
     for (let i = 0; i < 10; i++) {

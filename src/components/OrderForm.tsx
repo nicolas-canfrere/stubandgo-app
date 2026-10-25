@@ -101,24 +101,31 @@ export function OrderForm({
           </li>
         ))}
       </ul>
-      <p className="text-sm text-slate-600">{MAX_TICKETS} billets maximum par commande</p>
+      <p className="text-sm text-slate-600">
+        Au moins un billet, {MAX_TICKETS} billets maximum par commande.
+      </p>
       <p className="text-lg font-semibold">Total : {formatEuros(totalCents)}</p>
       <div>
         <label htmlFor="buyer-email" className="block text-sm font-medium">
           Email
         </label>
+        <p id="buyer-email-hint" className="text-sm text-slate-600">
+          Une adresse email valide est requise.
+        </p>
         <input
           id="buyer-email"
           type="email"
           value={buyerEmail}
           onChange={(event) => setBuyerEmail(event.target.value)}
           aria-invalid={emailViolation ? true : undefined}
-          aria-describedby={emailViolation ? 'buyer-email-error' : undefined}
+          aria-describedby={
+            emailViolation ? 'buyer-email-hint buyer-email-error' : 'buyer-email-hint'
+          }
           className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
         />
         {emailViolation && (
           <p id="buyer-email-error" className="mt-1 text-sm text-red-700">
-            {emailViolation.message}
+            Saisissez une adresse email valide.
           </p>
         )}
       </div>
