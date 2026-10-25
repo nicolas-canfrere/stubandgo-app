@@ -23,11 +23,30 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
   });
 
-  it('renders the scan page on /scan', async () => {
-    server.use(http.get(`${API_URL}/api/events`, () => HttpResponse.json([])));
+  it('renders the scan page on /scan for a signed-in member', async () => {
+    server.use(
+      http.get(`${API_URL}/api/organizations/demo-rock-asso`, () =>
+        HttpResponse.json({ slug: 'demo-rock-asso', name: 'Rock Asso', events: [] }),
+      ),
+    );
 
-    renderWithProviders(<App />, { route: '/scan' });
+    renderWithProviders(<App />, {
+      route: '/scan',
+      user: {
+        name: 'Camille Contrôle',
+        claims: {
+          organization: { 'demo-rock-asso': {} },
+          realm_access: { roles: ['organization-controller'] },
+        },
+      },
+    });
 
     expect(await screen.findByRole('heading', { name: "Contrôle d'accès" })).toBeInTheDocument();
+  });
+
+  it('sends a visitor who is not signed in from /scan to the sign-in', () => {
+    const { auth } = renderWithProviders(<App />, { route: '/scan' });
+
+    expect(auth.signinRedirect).toHaveBeenCalledWith({ state: '/scan' });
   });
 });

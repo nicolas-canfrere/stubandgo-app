@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
+import { RequireLogin } from './auth/RequireLogin';
 import { AccountMenu } from './components/AccountMenu';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { ConfirmationPage } from './pages/ConfirmationPage';
@@ -41,7 +42,14 @@ export function App() {
             <Route path="/orders/:orderId" element={<ConfirmationPage />} />
             <Route path="/o/:slug" element={<OrganizationPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route path="/scan" element={<ScanPage />} />
+            <Route
+              path="/scan"
+              element={
+                <RequireLogin>
+                  <ScanPage />
+                </RequireLogin>
+              }
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

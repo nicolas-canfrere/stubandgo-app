@@ -15,7 +15,7 @@ export interface paths {
         put?: never;
         /**
          * Scan a ticket token at the gate of an event.
-         * @description Consumes the admission right of the token for the event: only the first scan of a ticket is valid. Every scan is recorded, a malformed token included (outcome "unknown"). This route is not protected in L1: any client may scan.
+         * @description Consumes the admission right of the token for the event: only the first scan of a ticket is valid. Every authorized scan is recorded, a malformed token included (outcome "unknown"). Requires the Keycloak access token of a controller (realm role organization-controller) of the organization that owns the event; a refused scan is not recorded.
          */
         post: operations["post_access_scan_ticket"];
         delete?: never;
@@ -356,7 +356,25 @@ export interface operations {
                     };
                 };
             };
-            /** @description Malformed payload (/problems/validation_failed) or event identifier that is not a ULID (/problems/invalid_value); nothing is recorded. */
+            /** @description Access token missing or invalid (/problems/unauthorized, with a WWW-Authenticate: Bearer challenge); nothing is recorded. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The member is not a controller of the organization that owns the event, or the event does not exist or its identifier is not a ULID (/problems/forbidden); nothing is recorded. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Malformed payload (/problems/validation_failed); nothing is recorded. */
             422: {
                 headers: {
                     [name: string]: unknown;

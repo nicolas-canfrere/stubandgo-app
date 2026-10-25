@@ -6,7 +6,7 @@ import { API_URL } from '../api/client';
 import type { IScannerControls } from '@zxing/browser';
 import type { Result } from '@zxing/library';
 import { decodeQrFromFile, qrReader } from '../scan/decodeQr';
-import { intimateEvent, rockEvent } from '../test/fixtures';
+import { intimateEvent, problemBody, rockEvent } from '../test/fixtures';
 import { renderWithProviders } from '../test/render';
 import { server } from '../test/server';
 import { ScanPage } from './ScanPage';
@@ -22,9 +22,38 @@ const scansUrl = `${API_URL}/api/events/${rockEvent.id}/scans`;
 const consoleMethods = ['log', 'info', 'warn', 'error', 'debug'] as const;
 let consoleSpies: MockInstance[] = [];
 
+const controller = {
+  name: 'Camille Contrôle',
+  claims: {
+    organization: { 'demo-rock-asso': {} },
+    realm_access: { roles: ['organization-controller'] },
+  },
+};
+
+function renderScan(user: Parameters<typeof renderWithProviders>[1] = { user: controller }) {
+  return renderWithProviders(<ScanPage />, { route: '/scan', ...user });
+}
+
 function serveEvents() {
   server.use(
-    http.get(`${API_URL}/api/events`, () => HttpResponse.json([rockEvent, intimateEvent])),
+    http.get(`${API_URL}/api/organizations/demo-rock-asso`, () =>
+      HttpResponse.json({
+        slug: 'demo-rock-asso',
+        name: 'Rock Asso',
+        events: [rockEvent, intimateEvent],
+      }),
+    ),
+  );
+}
+
+function serveScanProblem(code: string, status: number) {
+  server.use(
+    http.post(scansUrl, () =>
+      HttpResponse.json(problemBody(code, status, 'Refused.'), {
+        status,
+        headers: { 'Content-Type': 'application/problem+json' },
+      }),
+    ),
   );
 }
 
@@ -103,7 +132,7 @@ describe('ScanPage', () => {
   it('lists the upcoming events to control', async () => {
     serveEvents();
 
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
 
     expect(
       await screen.findByRole('option', { name: 'Soirée Rock — mer. 25 nov. 2026 · 20:00' }),
@@ -122,7 +151,7 @@ describe('ScanPage', () => {
     serveEvents();
     const bodies = serveScan(outcome, firstUsedAt);
     decodeMock.mockResolvedValue(token);
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
 
     dropImage();
@@ -136,7 +165,7 @@ describe('ScanPage', () => {
     serveEvents();
     const bodies = serveScan('valid');
     decodeMock.mockResolvedValue(token);
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
 
     await userEvent.upload(screen.getByLabelText('Choisir une image'), image());
@@ -147,7 +176,7 @@ describe('ScanPage', () => {
 
   it('refuses the image until the controlled event is chosen', async () => {
     serveEvents();
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await screen.findByRole('option', { name: /Soirée Rock/ });
 
     dropImage();
@@ -160,7 +189,7 @@ describe('ScanPage', () => {
 
   it('keeps the camera off until the controlled event is chosen', async () => {
     serveEvents();
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await screen.findByRole('option', { name: /Soirée Rock/ });
 
     expect(screen.getByRole('button', { name: 'Démarrer la caméra' })).toBeDisabled();
@@ -172,7 +201,7 @@ describe('ScanPage', () => {
     serveEvents();
     const bodies = serveScan('valid');
     decodeMock.mockResolvedValue(null);
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
 
     dropImage();
@@ -189,7 +218,7 @@ describe('ScanPage', () => {
     const bodies = serveScan('valid');
     decodeMock.mockResolvedValue(token);
     stubMediaDevices(undefined);
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
 
     await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
@@ -208,7 +237,7 @@ describe('ScanPage', () => {
     decodeMock.mockResolvedValue(token);
     const getUserMedia = vi.fn().mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
     stubMediaDevices({ getUserMedia });
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
 
     await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
@@ -226,7 +255,7 @@ describe('ScanPage', () => {
     serveEvents();
     const bodies = serveScan('valid');
     const camera = fakeCamera();
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
     await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
     await screen.findByRole('button', { name: 'Arrêter la caméra' });
@@ -242,7 +271,7 @@ describe('ScanPage', () => {
     serveEvents();
     const bodies = serveScan('already_used', '2026-11-27T19:04:00Z');
     const camera = fakeCamera();
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
     await userEvent.click(screen.getByRole('button', { name: 'Démarrer la caméra' }));
     await camera.showQr(3);
@@ -271,7 +300,7 @@ describe('ScanPage', () => {
     );
     let resolveDecode: (value: string | null) => void = () => undefined;
     decodeMock.mockReturnValue(new Promise((resolve) => (resolveDecode = resolve)));
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
     await chooseRockEvent();
     dropImage();
     await screen.findByText("Lecture de l'image…");
@@ -286,10 +315,86 @@ describe('ScanPage', () => {
   });
 
   it('shows the unreachable API message instead of an empty page', async () => {
-    server.use(http.get(`${API_URL}/api/events`, () => HttpResponse.error()));
+    server.use(http.get(`${API_URL}/api/organizations/demo-rock-asso`, () => HttpResponse.error()));
 
-    renderWithProviders(<ScanPage />, { route: '/scan' });
+    renderScan();
 
     expect(await screen.findByRole('heading', { name: 'API injoignable' })).toBeInTheDocument();
+  });
+
+  it('names the controlled organization and sends the access token with the scan', async () => {
+    serveEvents();
+    let authorization: string | null = null;
+    server.use(
+      http.post(scansUrl, ({ request }) => {
+        authorization = request.headers.get('Authorization');
+
+        return HttpResponse.json({ outcome: 'valid', firstUsedAt: null });
+      }),
+    );
+    decodeMock.mockResolvedValue(token);
+    renderScan({ user: { ...controller, accessToken: 'controller-access-token' } });
+    expect(await screen.findByText('Organisation contrôlée : Rock Asso')).toBeInTheDocument();
+    await chooseRockEvent();
+
+    dropImage();
+
+    expect(await screen.findByRole('status')).toHaveTextContent('VALIDE');
+    expect(authorization).toBe('Bearer controller-access-token');
+  });
+
+  it('shows no scanner and calls no API to a member without the controller role', () => {
+    renderScan({
+      user: {
+        name: 'Alex Admin',
+        claims: {
+          organization: { 'demo-rock-asso': {} },
+          realm_access: { roles: ['organization-admin'] },
+        },
+      },
+    });
+
+    expect(screen.getByText("Votre compte n'a pas le rôle de contrôleur.")).toBeInTheDocument();
+    expect(screen.queryByLabelText('Événement contrôlé')).not.toBeInTheDocument();
+  });
+
+  it('shows no scanner and calls no API to a member without organization', () => {
+    renderScan({
+      user: { name: 'Sam Seul', claims: { realm_access: { roles: ['organization-controller'] } } },
+    });
+
+    expect(
+      screen.getByText("Votre compte n'est rattaché à aucune organisation."),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText('Événement contrôlé')).not.toBeInTheDocument();
+  });
+
+  it('offers to sign in again when the session expired during the scan', async () => {
+    serveEvents();
+    serveScanProblem('unauthorized', 401);
+    decodeMock.mockResolvedValue(token);
+    const { auth } = renderScan();
+    await chooseRockEvent();
+
+    dropImage();
+
+    expect(await screen.findByText('Votre session a expiré.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Se reconnecter' }));
+    expect(auth.signinRedirect).toHaveBeenCalledWith({ state: '/scan' });
+  });
+
+  it('says the ticket cannot be controlled with this account on a refused scan', async () => {
+    serveEvents();
+    serveScanProblem('forbidden', 403);
+    decodeMock.mockResolvedValue(token);
+    renderScan();
+    await chooseRockEvent();
+
+    dropImage();
+
+    expect(
+      await screen.findByText('Ce billet ne peut pas être contrôlé avec votre compte.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Se reconnecter' })).not.toBeInTheDocument();
   });
 });

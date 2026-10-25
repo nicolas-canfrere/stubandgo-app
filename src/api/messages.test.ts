@@ -10,6 +10,8 @@ describe('problemMessage', () => {
     ['order_too_large', '10 billets maximum par commande.'],
     ['payment_declined', 'Paiement refusé, vos places ont été libérées.'],
     ['order_expired', 'Réservation expirée, vos places ont été libérées.'],
+    ['unauthorized', 'Votre session a expiré.'],
+    ['forbidden', 'Ce billet ne peut pas être contrôlé avec votre compte.'],
     ['something_else', 'Une erreur est survenue. Réessayez.'],
   ])('translates %s', (code, expected) => {
     expect(message(code)).toBe(expected);

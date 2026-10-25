@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
-import { useScanTicket, useUpcomingEvents } from '../api/queries';
+import { useAuth } from 'react-oidc-context';
+import { useOrganization, useScanTicket } from '../api/queries';
+import { readMember } from '../auth/member';
 import { ProblemNotice } from '../components/ProblemNotice';
 import { formatDateTime } from '../format';
 import { CameraScanner } from '../scan/CameraScanner';
@@ -10,8 +12,38 @@ import { ScanResult } from '../scan/ScanResult';
 const CHOOSE_EVENT = "Choisissez d'abord l'événement contrôlé.";
 const NO_QR = 'Aucun QR code lisible dans cette image.';
 
+const NO_ORGANIZATION = "Votre compte n'est rattaché à aucune organisation.";
+const NOT_CONTROLLER = "Votre compte n'a pas le rôle de contrôleur.";
+
+/** The scan desk of the member's organization; nothing is loaded for a member who cannot control. */
 export function ScanPage() {
-  const events = useUpcomingEvents();
+  const { user } = useAuth();
+  const member = user ? readMember(user.profile) : null;
+
+  if (member?.organizationSlug == null) {
+    return <ScanRefusal message={NO_ORGANIZATION} />;
+  }
+  if (!member.isController) {
+    return <ScanRefusal message={NOT_CONTROLLER} />;
+  }
+
+  return <ScanDesk organizationSlug={member.organizationSlug} />;
+}
+
+function ScanRefusal({ message }: { message: string }) {
+  return (
+    <section className="space-y-4">
+      <h1 className="text-2xl font-bold">Contrôle d'accès</h1>
+      <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-red-900">
+        {message}
+      </p>
+    </section>
+  );
+}
+
+function ScanDesk({ organizationSlug }: { organizationSlug: string }) {
+  const { signinRedirect } = useAuth();
+  const organization = useOrganization(organizationSlug);
   const [eventId, setEventId] = useState('');
   const scan = useScanTicket();
   // The current selection, readable after an await (state captured in a closure would be stale).
@@ -19,8 +51,8 @@ export function ScanPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
 
-  if (events.error) {
-    return <ProblemNotice problem={events.error} />;
+  if (organization.error) {
+    return <ProblemNotice problem={organization.error} />;
   }
 
   // The token only travels from the decoder to the API call: never stored in state, never shown.
@@ -54,6 +86,9 @@ export function ScanPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-bold">Contrôle d'accès</h1>
+      {organization.data && (
+        <p className="text-slate-600">Organisation contrôlée : {organization.data.name}</p>
+      )}
       <div>
         <label htmlFor="scan-event" className="block text-sm font-medium">
           Événement contrôlé
@@ -61,7 +96,7 @@ export function ScanPage() {
         <select
           id="scan-event"
           value={eventId}
-          disabled={events.isPending}
+          disabled={organization.isPending}
           onChange={(event) => {
             selectedEvent.current = event.target.value;
             setEventId(event.target.value);
@@ -70,8 +105,8 @@ export function ScanPage() {
           }}
           className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2"
         >
-          <option value="">{events.isPending ? 'Chargement…' : '— Choisir —'}</option>
-          {events.data?.map((event) => (
+          <option value="">{organization.isPending ? 'Chargement…' : '— Choisir —'}</option>
+          {organization.data?.events.map((event) => (
             <option key={event.id} value={event.id}>
               {`${event.title} — ${formatDateTime(event.startsAt)}`}
             </option>
@@ -91,6 +126,15 @@ export function ScanPage() {
       {reading && <p className="text-slate-600">Lecture de l'image…</p>}
       {scan.isPending && <p className="text-slate-600">Vérification du billet…</p>}
       {scan.error && <ProblemNotice problem={scan.error} />}
+      {scan.error?.code === 'unauthorized' && (
+        <button
+          type="button"
+          onClick={() => void signinRedirect({ state: '/scan' })}
+          className="rounded bg-indigo-700 px-4 py-2 text-white"
+        >
+          Se reconnecter
+        </button>
+      )}
       {scan.data && <ScanResult outcome={scan.data.outcome} firstUsedAt={scan.data.firstUsedAt} />}
     </section>
   );
