@@ -1,0 +1,102 @@
+# AGENTS.md
+
+This is the React front of stubandgo (Vite + React 19 + TypeScript, single-page
+application, no server-side rendering). The Symfony API lives in the separate
+`stubandgo` repository and is the only source of truth. Check `package.json`
+for the exact versions in use; every dependency is pinned to an exact version.
+
+## Ask before generating
+
+If the task doesn't specify, ask rather than guess:
+
+- Does a business rule belong in the API rather than here? (The front only
+  displays; it never duplicates a rule.)
+- Which route and which API operation does the screen use?
+
+If you can't ask, state the assumption and pick the smallest option.
+
+## Conventions
+
+These rules are project decisions; the design document in the separate
+documentation repository (`recherches/specs/2026-10-25-stubandgo-front-l1-design.md`)
+explains why.
+
+### Layout
+
+Intended structure (later tasks add the folders that do not exist yet):
+
+- `src/api/`: typed API client (`openapi-fetch`), Problem Details error
+  handling, TanStack Query hooks.
+- `src/pages/`: one component per route.
+- `src/components/`: reusable presentational components.
+- `src/orders/`: order and payment flow.
+- `src/scan/`: QR code scan (camera and image).
+- `src/test/`: test tooling only (`setup.ts`, `server.ts` MSW server,
+  `render.tsx` with `renderWithProviders`).
+- `src/App.tsx` (layout and navigation), `src/main.tsx` (providers and
+  router), `src/index.css` (Tailwind).
+
+### Naming
+
+- Code, identifiers, comments, commits and this file are in English; the user
+  interface is in French.
+- Components and their files: `PascalCase.tsx` (one exported component per
+  file, named export). Hooks: `useThing`. Other modules: `camelCase.ts`.
+- Tests sit next to the code: `Thing.test.ts(x)`.
+
+### API types
+
+- API types are generated from the versioned copy `openapi/openapi.yaml`
+  (`openapi-typescript`). Never write an API type by hand.
+- Errors follow RFC 9457 (`application/problem+json`); the code is the last
+  segment of `type` (`/problems/<code>`).
+- Dates come in UTC (`Z` suffix) and are displayed in `Europe/Paris`; amounts
+  come in cents and are displayed through `Intl.NumberFormat('fr-FR', ...)`,
+  never as floats.
+- The ticket token is a bearer secret: never display it, never log it
+  (no `console.*` on that path).
+
+### Tooling and commits
+
+- Everything runs in the Node container pinned by `NODE_VERSION` in the
+  `Makefile` (mirrored in `compose.yaml` and `.env`); Node is not needed on the
+  host. Dependencies are pinned (`save-exact` in `.npmrc`),
+  `package-lock.json` is committed and installed with `npm ci`.
+- Commits follow Conventional Commits, in English, without a
+  `Co-Authored-By` trailer.
+
+## Testing
+
+Vitest with jsdom and Testing Library, configured in `vite.config.ts`;
+`src/test/setup.ts` starts the MSW `server` with
+`onUnhandledFrame: 'error'` (the MSW 3 name of `onUnhandledRequest`).
+
+- Tests never reach the real network: every request is answered by an MSW
+  handler declared in the test (`server.use(...)`); an unhandled request
+  fails the test.
+- Render with `renderWithProviders(ui, { route })` from `src/test/render.tsx`
+  (QueryClient with retries disabled + `MemoryRouter`).
+- Query by role and accessible name, as a user would.
+- `make test`: the whole suite.
+
+## Feature workflow
+
+Every change follows these steps, in order:
+
+1. **Test first.** Write the test, run `make test`, confirm it fails for the
+   right reason.
+2. **Implement** the minimum code that makes it pass.
+3. **Gate.** Run `make ci`.
+
+`make ci` runs, in order: `lint` (ESLint + Prettier check), `typecheck`
+(`tsc`), `test` (Vitest), `build` (Vite). Run `npm run format` through
+`make`'s container (or `docker compose run --rm --no-deps node npm run format`)
+to fix formatting. No mutation testing on the front.
+
+## Discover, don't guess
+
+Node and npm are not installed on the host. Use `make help` to list targets;
+`make up` serves http://localhost:5173 (API expected on `VITE_API_URL`,
+default http://localhost:8080). Read installed sources under `node_modules/`
+and the library docs rather than relying on memory: major versions move fast
+(React 19, React Router 7, Tailwind 4, MSW 3, Vitest 5).

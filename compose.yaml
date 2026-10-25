@@ -1,0 +1,13 @@
+services:
+  node:
+    image: node:${NODE_VERSION:-24.22.1}-alpine
+    user: '${UID:-1000}:${GID:-1000}'
+    working_dir: /app
+    environment:
+      HOME: /tmp
+      npm_config_cache: /tmp/npm-cache
+    command: sh -c "npm ci && npm run dev"
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./:/app
