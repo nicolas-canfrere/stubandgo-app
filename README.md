@@ -2,13 +2,13 @@
 
 Front React de la billetterie stubandgo : parcourir les événements à venir, commander des billets avec son email, payer (paiement simulé), puis contrôler les billets à l'entrée en scannant leur QR code.
 
-Cette étape (L1) est une application monopage (Vite, React 19, TypeScript, TanStack Query, Tailwind) qui appelle directement l'API Symfony du dépôt `stubandgo`. L'API est la seule source de vérité : le front affiche, il ne recalcule aucune règle métier.
+Application monopage (Vite, React 19, TypeScript, TanStack Query, Tailwind) qui appelle directement l'API Symfony du dépôt `stubandgo`. L'API est la seule source de vérité : le front affiche, il ne recalcule aucune règle métier. La L1 a livré le parcours d'achat et le scan ; la L2 réserve le scan aux contrôleurs connectés par Keycloak (`oidc-client-ts`, code + PKCE).
 
 ## Prérequis
 
 - Docker avec Docker Compose, `make` et `git`. Node n'est pas nécessaire sur la machine : tout passe par des conteneurs (Node pour le front, l'image officielle Playwright pour le parcours de bout en bout).
 - Les deux dépôts côte à côte dans le même dossier : `stubandgo` (l'API) et `stubandgo-app` (ce dépôt). `make api-types` lit l'API dans `../stubandgo`.
-- La stack de l'API sur sa branche Keycloak : elle démarre aussi Keycloak (http://localhost:8180, realm `stubandgo`), qui porte la connexion. Le front en a besoin pour la page de scan.
+- La stack de l'API (branche `main`) : elle démarre aussi Keycloak (http://localhost:8180, realm `stubandgo`), qui porte la connexion. Le front en a besoin pour la page de scan.
 - Ports libres : 5173 (front), 8080 (API), 8180 (Keycloak), 8025 (Mailpit), 15672 (RabbitMQ).
 - Pour `make e2e` : le conteneur Playwright utilise le réseau de l'hôte (`network_mode: host`) pour joindre le front, l'API et Mailpit sur `localhost`. C'est le fonctionnement natif de Docker Engine sous Linux ; avec Docker Desktop, il faut activer le réseau hôte (« Enable host networking » dans les réglages).
 
@@ -81,7 +81,7 @@ Mot de passe de tous les comptes : `stubandgo-demo`.
 make e2e
 ```
 
-`make e2e` rejoue le parcours de démonstration complet dans Chromium, contre les vraies stacks : un email unique par exécution, paiement refusé puis accepté, email retrouvé dans Mailpit par son API HTTP avec ses deux images `ticket-1.png` et `ticket-2.png`, puis connexion à Keycloak par le vrai formulaire (`controleur.rock`) et `ticket-1.png` déposée sur la page de scan (« VALIDE », puis « DÉJÀ UTILISÉ »). Le QR code est vraiment lu dans l'image, comme pour un humain. Un second test (`e2e/l2-isolation.spec.ts`) vérifie l'isolation : `controleur.theatre` ne voit pas « Soirée Rock », `admin.rock` est refusé, et la déconnexion ramène à l'accueil.
+`make e2e` rejoue le parcours de démonstration complet dans Chromium, contre les vraies stacks : un email unique par exécution, paiement refusé puis accepté, email retrouvé dans Mailpit par son API HTTP avec ses deux images `ticket-1.png` et `ticket-2.png`, puis connexion à Keycloak par le vrai formulaire (`controleur.rock`) et `ticket-1.png` déposée sur la page de scan (« VALIDE », puis « DÉJÀ UTILISÉ »). Le QR code est vraiment lu dans l'image, comme pour un humain. Un second test (`e2e/l2-isolation.spec.ts`) vérifie l'isolation : `controleur.theatre` voit « Le Malade imaginaire » mais pas « Soirée Rock », `admin.rock` est refusé, et la déconnexion ramène à l'accueil.
 
 `make e2e` ne lance rien : il exige la stack de l'API démarrée avec `app:demo:load`, et le front démarré par `make up`. Il vérifie d'abord `http://localhost:8080/health`, la présence de « Soirée Rock » dans `GET /api/events`, Mailpit, la discovery de Keycloak (`http://localhost:8180/realms/stubandgo/.well-known/openid-configuration`) et le front, et s'arrête avec un message clair si l'un manque (« lancez la stack de l'API et `app:demo:load` », « lancez la stack de l'API : make up » pour Keycloak, ou « lancez-le avec make up »). Le test tourne dans l'image `mcr.microsoft.com/playwright`, dont la version (`PLAYWRIGHT_VERSION` dans le `Makefile`, `compose.yaml` et `.env`) doit rester celle de `@playwright/test` dans `package.json`.
 
@@ -115,7 +115,7 @@ make ci
 
 Puis commitez `openapi/openapi.yaml` et `src/api/schema.d.ts` ensemble. Le dossier de l'API se change avec `make api-types API_DIR=<chemin>`.
 
-## Limites de L1
+## Limites
 
 - Seul le scan est protégé (connexion Keycloak, rôle contrôleur) ; la commande de billets reste anonyme.
 - Pas de compte acheteur ni de back-office : les organisations et les événements viennent de `app:demo:load`.
