@@ -13,11 +13,13 @@ export type TestUser = {
   name: string;
   accessToken?: string;
   claims?: Record<string, unknown>;
+  /** The state given to signinRedirect, handed back on the callback. */
+  state?: unknown;
 };
 
 export function renderWithProviders(
   ui: ReactElement,
-  { route = '/', user }: { route?: Route; user?: TestUser } = {},
+  { route = '/', user, authError }: { route?: Route; user?: TestUser; authError?: Error } = {},
 ) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -27,7 +29,14 @@ export function renderWithProviders(
   const auth = {
     isLoading: false,
     isAuthenticated: user !== undefined,
-    user: user ? { access_token: accessToken, profile: { name: user.name, ...user.claims } } : null,
+    error: authError,
+    user: user
+      ? {
+          access_token: accessToken,
+          state: user.state,
+          profile: { name: user.name, ...user.claims },
+        }
+      : null,
     signinRedirect: vi.fn().mockResolvedValue(undefined),
     signoutRedirect: vi.fn().mockResolvedValue(undefined),
   };

@@ -1,12 +1,21 @@
 import { useAuth } from 'react-oidc-context';
 import { Navigate } from 'react-router-dom';
 
+/** Only a same-origin path is a valid return target: no `//host`, no `/\host`, no absolute URL. */
+function returnPath(state: unknown): string {
+  if (typeof state !== 'string' || !state.startsWith('/') || /^\/[/\\]/.test(state)) {
+    return '/';
+  }
+
+  return state;
+}
+
 /** The provider exchanges the authorization code; once signed in, go back to the requested page. */
 export function AuthCallbackPage() {
   const { isLoading, isAuthenticated, error, user, signinRedirect } = useAuth();
 
   if (isAuthenticated) {
-    const target = typeof user?.state === 'string' && user.state.startsWith('/') ? user.state : '/';
+    const target = returnPath(user?.state);
 
     return <Navigate to={target} replace />;
   }
