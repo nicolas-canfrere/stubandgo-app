@@ -33,3 +33,24 @@ export const problemBody = (code: string, status: number, detail: string) => ({
   status,
   detail,
 });
+
+type EventDetail = components['schemas']['EventDetail'];
+
+export const pleinTierId = '01JAE5Z8Q3M4N6P7R8S9T0V2A1';
+export const reduitTierId = '01JAE5Z8Q3M4N6P7R8S9T0V2A2';
+export const gratuitTierId = '01JAE5Z8Q3M4N6P7R8S9T0V2A3';
+
+export const rockEventDetail: EventDetail = {
+  id: rockEvent.id,
+  title: 'Soirée Rock',
+  description: 'Une soirée rock à La Cigale.',
+  venue: 'La Cigale',
+  startsAt: rockEvent.startsAt,
+  capacity: 200,
+  organization: rockEvent.organization,
+  priceTiers: [
+    { id: pleinTierId, label: 'Plein', priceCents: 2500 },
+    { id: reduitTierId, label: 'Réduit', priceCents: 1500 },
+    { id: gratuitTierId, label: 'Gratuit', priceCents: 0 },
+  ],
+};

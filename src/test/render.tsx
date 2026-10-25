@@ -3,7 +3,9 @@ import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?: string } = {}) {
+type Route = string | { pathname: string; state?: unknown };
+
+export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?: Route } = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });

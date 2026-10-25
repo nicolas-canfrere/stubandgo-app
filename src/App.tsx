@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes } from 'react-router-dom';
+import { EventPage } from './pages/EventPage';
 import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OrganizationPage } from './pages/OrganizationPage';
@@ -23,6 +24,7 @@ export function App() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/events/:eventId" element={<EventPage />} />
           <Route path="/o/:slug" element={<OrganizationPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
